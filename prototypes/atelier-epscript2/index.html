@@ -1,0 +1,1681 @@
+<title>Atelier EPScript 2.0</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&display=swap">
+<style>
+/* Mise en page : établi à trois colonnes — source | structure | rendu — qui se replie en une colonne sur téléphone. */
+:root{
+  --bg:#f3f5f9; --surface:#ffffff; --sunken:#eaeef5; --fg:#141c29; --muted:#566377; --line:#d5dce7;
+  --accent:#1d4cb8; --accent-soft:#e2eafb;
+  --data:#0b6a85; --data-soft:#dcf0f5; --logic:#6538b0; --logic-soft:#eee6fb; --fn:#26743a; --fn-soft:#e0f2e4;
+  --lit:#4b5566; --lit-soft:#eef0f4; --space:#d9822b; --str:#2f7040; --warn:#8a5a00; --warn-soft:#fdf3dc; --err:#b42318; --err-soft:#fde9e7; --ok:#26743a;
+  --ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --display:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0e131b; --surface:#151c27; --sunken:#1b2431; --fg:#e5eaf1; --muted:#98a5b7; --line:#2a3546;
+  --accent:#86a8ff; --accent-soft:#1d2945;
+  --data:#5fc4df; --data-soft:#122f38; --logic:#b99dff; --logic-soft:#281f40; --fn:#72d08c; --fn-soft:#15301e;
+  --lit:#b3bdcb; --lit-soft:#212a37; --space:#f0a35a; --str:#8fd19e; --warn:#f2c46b; --warn-soft:#3a2e14; --err:#ff8f86; --err-soft:#3b1b1a; --ok:#72d08c; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0e131b; --surface:#151c27; --sunken:#1b2431; --fg:#e5eaf1; --muted:#98a5b7; --line:#2a3546;
+  --accent:#86a8ff; --accent-soft:#1d2945;
+  --data:#5fc4df; --data-soft:#122f38; --logic:#b99dff; --logic-soft:#281f40; --fn:#72d08c; --fn-soft:#15301e;
+  --lit:#b3bdcb; --lit-soft:#212a37; --space:#f0a35a; --str:#8fd19e; --warn:#f2c46b; --warn-soft:#3a2e14; --err:#ff8f86; --err-soft:#3b1b1a; --ok:#72d08c; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:none;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+h1{font-family:var(--display);font-weight:600;font-size:28px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+h1 .ver{color:var(--accent)}
+.sub{color:var(--muted);margin:2px 0 0;max-width:70ch}
+.actions{display:flex;flex-wrap:wrap;gap:8px}
+button{font:inherit;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:6px;padding:6px 12px;cursor:pointer}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button:focus-visible,textarea:focus-visible,.blk:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+/* Disposition : rangées de panneaux redimensionnables, déplaçables, pleine largeur au besoin */
+.layout{display:flex;flex-direction:column;gap:16px}
+.lrow{display:flex;align-items:flex-start;min-width:0}
+.lrow>.panel{flex:1 1 0px;min-width:240px}
+.split{flex:0 0 16px;align-self:stretch;cursor:col-resize;position:relative;touch-action:none}
+.split::after{content:"";position:absolute;left:7px;top:8px;bottom:8px;width:2px;border-radius:2px;background:var(--line)}
+.split:hover::after,.split.drag::after{background:var(--accent)}
+.panel.dropbefore{box-shadow:-4px 0 0 var(--accent)} .panel.dropafter{box-shadow:4px 0 0 var(--accent)}
+.panel.wide.dropbefore{box-shadow:0 -4px 0 var(--accent)} .panel.wide.dropafter{box-shadow:0 4px 0 var(--accent)}
+.pmove{display:inline-flex;gap:3px;margin-left:auto}
+.pmove button{font-size:11px;padding:1px 6px;line-height:1.4;text-transform:none;letter-spacing:0}
+.grip{cursor:grab;color:var(--muted);font-size:14px;letter-spacing:0;padding:0 4px 0 0;user-select:none}
+.grip:active{cursor:grabbing}
+.panel>h2{flex-wrap:wrap}
+.panel>h2 .htitle{display:inline-flex;align-items:center;gap:4px}
+@media (max-width:760px){.lrow{flex-direction:column;gap:16px}.lrow>.panel{width:100%;flex:none !important}.split,.grip{display:none}}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;min-width:0}
+.panel>h2{font-family:var(--display);font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+  margin:0;padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.panel>h2 small{font-family:var(--ui);text-transform:none;letter-spacing:0;font-weight:400}
+.pbody{padding:12px 14px;min-width:0}
+
+/* Éditeur */
+.editor{display:grid;grid-template-columns:auto minmax(0,1fr);height:470px;min-height:180px;resize:vertical;overflow:hidden;background:var(--sunken);border-bottom:1px solid var(--line)}
+.gutter{font-family:var(--mono);font-size:12.5px;line-height:1.6;color:var(--muted);text-align:right;padding:10px 8px 10px 10px;overflow:hidden;user-select:none;white-space:pre}
+.gutter .bad{color:var(--err);font-weight:600}
+.area{position:relative;min-width:0;overflow:hidden}
+.hl,textarea#src{position:absolute;inset:0;margin:0;box-sizing:border-box;width:100%;height:100%;font-family:var(--mono);font-size:12.5px;line-height:1.6;padding:10px 12px;white-space:pre;tab-size:2;border:0;letter-spacing:0;font-variant-ligatures:none}
+.hl{pointer-events:none;overflow:hidden;color:var(--fg)}
+textarea#src{resize:none;background:transparent;color:transparent;caret-color:var(--fg);overflow:auto}
+textarea#src::selection{background:var(--accent-soft);color:transparent}
+.hl span,.blocks .tok{transition:opacity .15s}
+.kw{color:var(--logic);font-weight:600}
+.hl .kw,.blocks .tok.kw{font:inherit;font-weight:inherit;text-transform:none;letter-spacing:0}
+[hidden]{display:none !important}
+.fd{color:var(--data)} .mt{color:var(--fn)} .fc{color:var(--fn);font-weight:500}
+.st{color:var(--str)} .nm{color:var(--str)} .op{color:var(--muted)} .vr{color:var(--fg)}
+.cm{color:var(--muted);font-style:italic} .bad{color:var(--err);text-decoration:underline wavy}
+.hl .dim{opacity:.38}
+.sp2{background:linear-gradient(var(--space),var(--space)) bottom/80% 2px no-repeat}
+.errlayer{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden}
+.errmark{position:absolute;display:flex;flex-direction:column;align-items:flex-start}
+.errmark .arrow{color:var(--err);font-size:11px;line-height:1;margin-left:-1px}
+.errmark .msg{background:var(--err-soft);color:var(--err);border:1px solid color-mix(in srgb,var(--err) 45%,transparent);border-radius:6px;padding:3px 8px;font-family:var(--ui);font-size:12px;line-height:1.35;white-space:normal;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.hl .errtok{text-decoration:underline wavy var(--err);text-decoration-skip-ink:none}
+.hl .ghost{color:var(--muted);opacity:.75}
+.hl .ghost-hint{font-family:var(--ui);font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:1px}
+.gutter .act{color:var(--accent);font-weight:600}
+.status{display:flex;flex-direction:column;gap:6px;padding:10px 14px;font-size:13px}
+.ok{color:var(--ok);font-weight:500}
+.errline{background:var(--err-soft);color:var(--err);border-radius:6px;padding:6px 10px;cursor:pointer;font-family:var(--mono);font-size:12.5px;border:0;text-align:left;width:100%}
+.errline:hover{color:var(--err);border:0;filter:brightness(.97)}
+
+/* Blocs alignés sur le texte */
+.blocks.textual{font-family:var(--mono);font-size:12.5px;line-height:1.75;white-space:pre;overflow:auto;position:relative;display:block}
+.blocks .bx{display:inline-block;vertical-align:top;border-radius:6px;cursor:pointer}
+.blocks .bx.k-def{display:block;padding:6px 10px;margin:0 0 10px;background:var(--accent-soft);border:1px solid transparent}
+.blocks .bx.k-logic{background:var(--logic-soft);border:1px solid color-mix(in srgb,var(--logic) 40%,transparent);padding:0 3px;margin:0 -4px 2px}
+.blocks .hang{display:inline-block;vertical-align:top}
+.blocks .s-lit{background:color-mix(in srgb,var(--str) 14%,transparent);color:var(--str);border-radius:3px;padding:0 1px;cursor:pointer}
+.blocks .s-lit .empty{font-family:var(--ui);font-style:italic;font-size:11px}
+.blocks .cm{display:inline-block;margin-bottom:2px}
+.blocks.focus .tok{opacity:.35}
+.blocks.focus .active .tok{opacity:1}
+.blocks .bx.active{outline:2px solid var(--accent);outline-offset:1px}
+.blocks .bx:hover{border-color:var(--accent)}
+/* Blocs */
+.blocks{display:flex;flex-direction:column;gap:10px;height:560px;min-height:160px;resize:vertical;overflow:auto}
+.blk{border-radius:7px;padding:6px 8px;display:flex;flex-direction:column;gap:5px;border:1px solid transparent;cursor:pointer;min-width:0}
+.blk:hover{border-color:var(--accent)}
+.blk .lbl{font-family:var(--display);font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.row{display:flex;flex-wrap:wrap;gap:5px;align-items:center;min-width:0}
+.k-def{background:var(--accent-soft)} .k-def>.lbl{color:var(--accent)}
+.k-logic{background:var(--logic-soft)} .k-logic>.lbl,.k-logic>.row>.kw{color:var(--logic)}
+.k-fn{background:var(--fn-soft)} .k-fn>.lbl{color:var(--fn)}
+.chip{font-family:var(--mono);font-size:12px;border-radius:5px;padding:1px 6px;cursor:pointer;border:1px solid transparent;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.chip:hover{border-color:var(--accent)}
+.c-data{background:var(--data-soft);color:var(--data)}
+.c-lit{background:var(--lit-soft);color:var(--lit)}
+.c-op{color:var(--muted);font-family:var(--mono);font-size:12px}
+.kw{font-family:var(--display);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.arm{display:flex;gap:6px;align-items:flex-start;flex-wrap:wrap}
+.sp{display:inline-block;width:.55em;height:.9em;border-bottom:2px solid var(--space);margin:0 .5px;vertical-align:baseline}
+.chip .empty{font-style:italic;font-family:var(--ui);opacity:.8}
+.toggle{font-size:12px;padding:3px 9px}
+.editor{position:relative}
+.ac{position:absolute;z-index:5;min-width:260px;max-width:420px;max-height:260px;overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.18);padding:4px;font-size:12.5px}
+.ac-item{display:grid;grid-template-columns:auto 1fr;column-gap:8px;padding:4px 8px;border-radius:5px;cursor:pointer;align-items:baseline}
+.ac-item[aria-selected="true"]{background:var(--accent-soft)}
+.ac-l{font-family:var(--mono);color:var(--fg)}
+.ac-k{font-size:10.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);grid-row:span 2}
+.ac-d{grid-column:2;color:var(--muted);font-size:11.5px}
+.hint{font-size:12px;color:var(--muted);padding:6px 14px 0}
+.warnline{background:var(--warn-soft);color:var(--warn);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:12.5px;border:0;text-align:left;width:100%}
+.warnline:hover{color:var(--warn);border:0;filter:brightness(.97)}
+.examples{margin-top:0}
+.shell{display:flex;gap:16px;align-items:flex-start}
+.shell>.layout{flex:1 1 auto;min-width:0}
+.side{flex:0 0 250px;position:sticky;top:12px;max-height:calc(100vh - 24px);overflow:auto;background:var(--surface);border:1px solid var(--line);border-radius:10px}
+.side-head{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:8px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
+.side-title{font-family:var(--display);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+#side-toggle{padding:1px 8px;font-size:13px}
+.side.collapsed{flex-basis:40px;overflow:hidden}
+.side.collapsed .side-body{display:none}
+.side.collapsed .side-head{flex-direction:column;border:0;padding:8px 4px}
+.side.collapsed .side-title{writing-mode:vertical-rl;transform:rotate(180deg);order:2;margin-top:8px}
+.side-body{padding:4px 8px 10px}
+.side details{border-bottom:1px solid var(--line);padding:6px 0}
+.side details:last-child{border-bottom:0}
+.side summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--muted);padding:2px 0}
+.fitem{display:flex;align-items:flex-start;gap:4px;margin:2px 0}
+.fins{flex:1 1 auto;min-width:0;text-align:left;border:1px solid transparent;background:transparent;padding:2px 6px;border-radius:5px;font-family:var(--mono);font-size:12px;font-weight:400;line-height:1.35}
+.fins:hover{background:var(--accent-soft);border-color:transparent}
+.fins small{display:block;font-family:var(--ui);font-size:11px;color:var(--muted);white-space:normal}
+.fdef{padding:1px 6px;font-size:11px}
+.doctabs{display:flex;align-items:center;gap:4px;padding:6px 10px 0;border-bottom:1px solid var(--line);background:var(--surface)}
+.doctabs button{border-bottom-left-radius:0;border-bottom-right-radius:0;border-bottom:0;font-size:12.5px;padding:4px 12px;margin-bottom:-1px}
+.doctabs button[aria-pressed="true"]{background:var(--sunken);color:var(--fg);border-color:var(--line)}
+.docinfo{margin-left:auto;font-size:11.5px;color:var(--muted)}
+@media (max-width:760px){.shell{flex-direction:column}.side{position:static;width:100%;flex:none;max-height:none}}
+.boxview .blocks{height:470px;border-bottom:1px solid var(--line);background:var(--sunken)}
+.boxview .legend{border-bottom:1px solid var(--line)}
+.live{border-top:1px solid var(--line);padding:10px 14px 14px}
+.livehead{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px;font-family:var(--display);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.panel>h2 .tabs{text-transform:none;letter-spacing:0}
+.exgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.ex label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+.ex textarea{width:100%;box-sizing:border-box;font-family:var(--serif);font-size:14px;line-height:1.4;min-height:84px;border:1px solid var(--line);border-radius:7px;background:var(--sunken);color:var(--fg);padding:8px 10px;resize:vertical}
+.exbar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.exnotes{font-size:13px;color:var(--muted);margin:0;padding-left:18px}
+.exnotes b{color:var(--fg);font-weight:600}
+.structure{font-family:var(--mono);font-size:12px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 12px}
+
+/* Tests */
+.tests{display:flex;flex-direction:column;gap:8px}
+.test{border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;background:var(--surface);text-align:left;font-weight:400;display:flex;flex-direction:column;gap:3px}
+.test[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--fg)}
+.test .tt{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-family:var(--display);font-weight:600}
+.cite{font-family:var(--serif);font-size:15px;line-height:1.45}
+.cite a{color:var(--accent)}
+.rterr{color:var(--err);font-family:var(--mono);font-size:12px}
+
+/* Couches */
+.tabs{display:flex;flex-wrap:wrap;gap:6px}
+.layerhead{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;align-items:baseline;margin:12px 0 8px}
+.accept{font-family:var(--mono);font-size:12px;color:var(--muted)}
+pre.code{font-family:var(--mono);font-size:12px;line-height:1.55;background:var(--sunken);border-radius:8px;padding:10px 12px;overflow:auto;max-height:360px;margin:0;white-space:pre}
+.bare{font-family:Georgia,"Times New Roman",serif;font-size:15px;line-height:1.4;border:1px dashed var(--line);border-radius:8px;padding:6px 14px;margin-top:10px}
+.bare h1{font-size:22px;margin:10px 0}.bare h2{font-size:17px}.bare a{color:var(--accent)}
+.bare dl{display:grid;grid-template-columns:auto 1fr;gap:2px 12px}.bare dt{font-weight:700}.bare dd{margin:0}
+.notice{display:flex;flex-direction:column;gap:12px}
+.badge{align-self:flex-start;font-family:var(--display);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 10px}
+.notice h3{font-family:var(--serif);font-weight:600;font-size:23px;line-height:1.25;margin:0;text-wrap:balance}
+.people{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px}
+.orcid{font-family:var(--mono);font-size:11px;color:var(--fn);background:var(--fn-soft);border-radius:4px;padding:0 5px;margin-left:4px}
+.meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;font-size:13px}
+.meta>div{min-width:0;overflow-wrap:anywhere}
+.meta div{display:flex;flex-direction:column}.meta span:first-child{color:var(--muted);font-size:11.5px;text-transform:uppercase;letter-spacing:.06em}
+.abstract{font-family:var(--serif);font-size:15px;line-height:1.55;max-width:65ch;margin:0}
+.citebox{background:var(--sunken);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+.dl{display:flex;flex-wrap:wrap;gap:6px}
+.dl span{font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:3px 9px;color:var(--muted)}
+footer{color:var(--muted);font-size:12.5px;max-width:90ch}
+@media (prefers-reduced-motion:no-preference){.blk,.chip,button{transition:border-color .12s,color .12s}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1 data-en="EPScript Workshop &lt;span class=&quot;ver&quot;&gt;2.0&lt;/span&gt;">Atelier EPScript <span class="ver">2.0</span></h1>
+      <p class="sub" data-en="Prototype for &lt;em&gt;EPrints du futur&lt;/em&gt;: a citation rule written like sentences, in French or in English, checked and compiled at every keystroke, shown as boxes, tested on records, then served in three layers. Like AppleScript's dialects, the rule is kept as one neutral structure and shown in each person's language. The records are fictional.">Prototype pour <em>EPrints du futur</em> : une règle de citation écrite comme des phrases, en français ou en anglais, vérifiée et compilée à chaque frappe, vue en blocs, testée sur des notices, puis servie en trois couches. Comme les dialectes d'AppleScript, la règle est conservée sous une structure neutre et affichée dans la langue de chacun. Les notices sont fictives.</p>
+    </div>
+    <div class="actions">
+      <span class="tabs" role="group" aria-label="Langue de l'interface / Interface language"><button type="button" data-ui="fr" title="Interface en français">FR</button><button type="button" data-ui="en" title="English interface">EN</button></span>
+      <button id="btn-err" type="button" data-en="Introduce a typo">Introduire une faute de frappe</button>
+      <button id="btn-loop" type="button" data-en="Test the sandbox">Tester le bac à sable</button>
+      <button id="btn-layout" type="button" title="Revenir à la disposition d'origine" data-en-title="Restore the original layout" data-en="Original layout">Disposition d'origine</button>
+      <button id="btn-simple" type="button" data-en="Simplified version">Version simplifiée</button>
+      <button id="btn-reset" type="button" data-en="Detailed version">Version détaillée</button>
+    </div>
+  </header>
+
+  <div class="shell">
+  <aside class="side" id="side" aria-label="Fonctions disponibles" data-en-aria-label="Available functions">
+    <div class="side-head"><span class="side-title" data-en="Available functions">Fonctions disponibles</span><button type="button" id="side-toggle" aria-expanded="true" title="Replier la colonne">«</button></div>
+    <div class="side-body" id="side-body"></div>
+  </aside>
+  <div class="layout" id="layout">
+    <section class="panel col-src" data-panel="src" aria-labelledby="h-src">
+      <h2 id="h-src"><span data-en="Editor">Éditeur</span> <span class="tabs" role="group" aria-label="Vue" data-en-aria-label="View"><button type="button" data-view="code">Code</button><button type="button" data-view="boxes" data-en="Boxes">Boîtes</button></span><span class="tabs" role="group" aria-label="Langue du script" data-en-aria-label="Script language"><button type="button" data-dialect="fr">Français</button><button type="button" data-dialect="en">English</button></span><button type="button" class="toggle" id="btn-spaces" aria-pressed="true" data-en="Visible spaces">Espaces visibles</button></h2>
+      <div class="doctabs" role="group" aria-label="Document"><button type="button" data-doc="rule" data-en="Rule">Règle</button><button type="button" data-doc="lib" data-en="Functions">Fonctions</button><span class="docinfo" id="docinfo"></span></div>
+      <div class="editor" id="view-code">
+        <div class="gutter" id="gutter" aria-hidden="true"></div>
+        <div class="area"><pre class="hl" id="hl" aria-hidden="true"></pre><textarea id="src" spellcheck="false" aria-label="Code source EPScript 2.0" data-en-aria-label="EPScript 2.0 source code"></textarea></div>
+      </div>
+      <div class="boxview" id="view-boxes" hidden>
+        <div class="pbody blocks textual" id="blocks"></div>
+        <div class="legend">
+          <span class="chip fd" style="background:var(--data-soft)" data-en="field">champ</span><span class="chip c-lit" data-en="text">texte</span>
+          <span class="chip kw" style="background:var(--logic-soft)" data-en="logic">logique</span>
+          <span class="chip fc" style="background:var(--fn-soft)" data-en="function">fonction</span>
+          <span class="chip" style="color:var(--muted)" data-en="click an element to edit it in the code">cliquez un élément pour l'éditer dans le code</span>
+        </div>
+      </div>
+      <div class="hint" id="hint-code" data-en="Completion: type “.” or Ctrl+Space, then arrows and Tab. Next-step prediction: at the end of a line, the likely continuation shows in grey (drawn from your code and from common forms); Tab accepts it, Esc dismisses it.">Complétion : tapez « . » ou Ctrl+Espace, puis flèches et Tab. Prédiction de la suite : en fin de ligne, la suite probable s'affiche en gris (tirée de votre code et des formes courantes) ; Tab l'accepte, Échap l'écarte.</div>
+      <div class="status" id="status" aria-live="polite"></div>
+      <div class="live">
+        <div class="livehead"><span data-en="Live output">Rendu en direct</span><button type="button" class="toggle" id="btn-magic" aria-pressed="true" data-en="Magic punctuation">Ponctuation magique</button></div>
+        <div class="tests" id="tests"></div>
+      </div>
+    </section>
+
+    <section class="panel col-render" data-panel="out" aria-labelledby="h-out">
+      <h2 id="h-out"><span data-en="Served layers">Couches servies</span> <small id="out-sel"></small></h2>
+      <div class="pbody">
+        <div class="layerhead" style="margin-top:0">
+          <div class="tabs" role="group" aria-label="Couche servie" data-en-aria-label="Served layer">
+            <button type="button" data-layer="data" data-en="Data">Données</button>
+            <button type="button" data-layer="frame" data-en="Frame">Cadre</button>
+            <button type="button" data-layer="form" data-en="Form">Forme</button>
+          </div>
+          <span class="accept" id="accept"></span>
+        </div>
+        <div id="layer"></div>
+      </div>
+    </section>
+  <section class="panel examples" data-panel="ex" aria-labelledby="h-ex">
+    <h2 id="h-ex"><span data-en="Rule from examples">Règle à partir d'exemples</span> <small data-en="write the reference you want, the workshop infers the script">écrivez la référence voulue, l'atelier en déduit le script</small></h2>
+    <div class="pbody">
+      <div class="exgrid" id="exgrid"></div>
+      <div class="exbar">
+        <button type="button" id="ex-fill" data-en="Fill with the current output">Remplir avec le rendu actuel</button>
+        <button type="button" id="ex-clear" data-en="Clear">Vider</button>
+        <button type="button" id="ex-go" data-en="Generate the rule">Générer la règle</button>
+      </div>
+      <ul class="exnotes" id="exnotes"><li data-en="One reference per type is enough (thesis, article, dataset). Put italics between asterisks: *Title*. Field values are recognised in the text; the rest becomes fixed text. The generated rule replaces the source, in French or in English depending on the chosen language.">Une référence par type suffit (thèse, article, jeu de données). Mettez l'italique entre astérisques : *Titre*. Les valeurs des champs sont reconnues dans le texte ; le reste devient du texte fixe. La règle générée remplace la source, en français ou en anglais selon la langue choisie.</li></ul>
+    </div>
+  </section>
+  </div>
+
+
+  </div>
+  <footer data-en="What this shows: functions in their own document, joined to the rule at compile time, and always listed in a collapsible column with the built-in functions, methods and fields (a comment just above a function becomes its description); function parameters typed from their calls; programming by example (a reference written by hand becomes an EPScript rule to adjust); completion drawn from the grammar and the schema, and next-step prediction drawn from an index of the code itself and a small base of common forms, with no model, which also flags record types that are not covered; “magic” punctuation that keeps the rule simple (compare the simplified and detailed versions on the trap record, with and without magic punctuation); a readable syntax outside XML, written in French or in English on one neutral structure (switching language rewrites the script without changing its fingerprint); reusable functions; type checking that flags an unknown field and suggests the right name before going live; isolated execution that stops endless recursion; syntax highlighting and, in the same window, a switch between code and boxes aligned on the text, with the output computed live just below, where the scope being written stays sharp and the rest fades; and one record served in three layers (data for robots, frame for screen readers, form for browsers). The language, compiler and renderings are deliberately simplified.">
+    Ce qui est démontré : les fonctions dans leur propre document, réunies à la règle à la compilation, et listées en permanence dans une colonne repliable avec les fonctions intégrées, les méthodes et les champs (un commentaire juste au-dessus d'une fonction devient sa description) ; des paramètres de fonction typés d'après leurs appels ; la programmation par l'exemple (une référence écrite à la main devient une règle EPScript à ajuster) ; une complétion tirée de la grammaire et du schéma, et une prédiction de la suite tirée de l'index du code lui-même et d'une petite base de formes courantes, sans modèle, qui signale aussi les types de notice non couverts ; une ponctuation « magique » qui rend la règle simple (comparez la version simplifiée et la version détaillée sur la notice piège, avec et sans ponctuation magique) ; une syntaxe lisible hors du XML, écrite en français ou en anglais sur une même structure neutre (le changement de langue réécrit le script sans en changer l'empreinte) ; des fonctions réutilisables ; une vérification de types qui signale un champ inconnu et suggère le bon nom avant la mise en ligne ; une exécution isolée qui arrête une récursion sans fin ; une coloration syntaxique et, dans la même fenêtre, une bascule entre le code et les boîtes alignées sur le texte, avec le rendu calculé en direct juste en dessous, où la portée en cours d'écriture reste nette et le reste s'estompe ; et une même notice servie en trois couches (données pour les robots, cadre pour les lecteurs d'écran, forme pour les navigateurs). Le langage, le compilateur et les rendus sont volontairement simplifiés.
+  </footer>
+  <p class="signature" style="margin:0;color:var(--muted);font-size:12.5px">Copyright © 2026 Robin Sylvestre<br>Robin Sylvestre avec Claude Code<br>PolyPublie ❤️ Polytechnique Montréal</p>
+</div>
+
+<script>
+"use strict";
+/* ---------- Notices d'essai (fictives) ---------- */
+const RECORDS = [
+  { id:"12345", type:"thesis", title:"Optimisation topologique de structures en treillis imprimées en 3D",
+    creators:[{family:"Bouchard",given:"Marie-Ève",orcid:"0000-0002-1825-0097"}],
+    date:{year:2025,month:5}, thesis_type:"Thèse de doctorat", institution:"Polytechnique Montréal",
+    doi:"10.5555/exemple.2025.001", language:"fr", license:"https://creativecommons.org/licenses/by/4.0/",
+    abstract:"Cette thèse propose une méthode d'optimisation topologique adaptée aux contraintes de la fabrication additive, appliquée à des structures en treillis légères." },
+  { id:"23456", type:"article", title:"Détection précoce de fissures par apprentissage profond sur images thermiques",
+    creators:[{family:"Nguyen",given:"Linh"},{family:"Tremblay",given:"Jean-François"},{family:"Okafor",given:"Adaeze"}],
+    date:{year:2024,month:3}, publication:"Journal fictif d'ingénierie des structures", volume:"48", number:"3",
+    doi:"10.5555/exemple.2024.017", language:"fr", license:"https://creativecommons.org/licenses/by-nc/4.0/",
+    abstract:"Nous évaluons un réseau convolutif entraîné sur des images thermiques pour repérer des fissures avant qu'elles ne soient visibles à l'œil nu." },
+  { id:"34567", type:"dataset", title:"Mesures de débit de la rivière des Prairies, 2015–2024",
+    creators:[{family:"Gagnon",given:"Sophie"},{family:"Haddad",given:"Karim"}],
+    date:{year:2025,month:1}, publisher:"Dépôt de données exemple", doi:null, language:"fr",
+    license:"https://creativecommons.org/licenses/by/4.0/",
+    abstract:"Séries horaires de débit et de température de l'eau, avec les métadonnées des stations et la méthode de calibration." },
+  { id:"45678", type:"article", title:"L'IA peut-elle détecter les fissures ?  ",
+    creators:[{family:"Lavoie",given:"Émilie"}], date:{year:2023},
+    publication:"Cahiers fictifs du génie civil.", volume:null, number:null, doi:null, language:"fr",
+    license:"https://creativecommons.org/licenses/by/4.0/",
+    abstract:"Notice piège : titre terminé par un point d'interrogation et des espaces, revue terminée par un point, ni volume, ni numéro, ni DOI." }
+];
+const BASE = "https://depot.example/";
+
+/* ---------- Schéma : ce que le vérificateur de types connaît ---------- */
+const SCHEMA = {
+  record:{ id:"str", type:"str", title:"str", creators:{list:"person"}, date:"date", doi:"str", language:"str", license:"str",
+    abstract:"str", thesis_type:"str", institution:"str", publication:"str", volume:"str", number:"str", pages:"str", publisher:"str" },
+  person:{ family:"str", given:"str", orcid:"str" },
+  date:{ year:"num", month:"num", day:"num" }
+};
+const METHODS = { is_set:0, length:0, first:0, last:0, initials:0, upper:0, join:1, one_of:-1 };
+const BUILTINS = { em:1, link:1, if_set:-1 };
+/* Langue de l'interface (distincte du dialecte du code) */
+let UIL="fr";
+try{ const h=(location.hash||"").slice(1); if(h==="en"||h==="fr") UIL=h; else { const v=localStorage.getItem("atelier-epscript2-lang"); if(v==="en"||v==="fr") UIL=v; else UIL=/^fr/i.test(navigator.language||"")?"fr":"en"; } }catch(_){ UIL=/^fr/i.test((typeof navigator!=="undefined"&&navigator.language)||"")?"fr":"en"; }
+const T=(fr,en)=> UIL==="en" ? en : fr;
+const Q=x=> UIL==="en" ? `“${x}”` : `« ${x} »`;
+const KWMAP = {fn:"fn",fonction:"fn",citation:"citation","if":"if",si:"if",then:"then",alors:"then","else":"else",sinon:"else",
+  match:"match",selon:"match",and:"and",et:"and",or:"or",ou:"or",not:"not",non:"not"};
+const FR = {
+  kw:{fn:"fonction",citation:"citation","if":"si",then:"alors","else":"sinon",match:"selon",and:"et",or:"ou",not:"non"},
+  f:{title:"titre",creators:"auteurs",year:"année",family:"nom",given:"prénom",publication:"revue",number:"numéro",
+     publisher:"éditeur",institution:"établissement",thesis_type:"type_thèse",abstract:"résumé",language:"langue",
+     license:"licence",month:"mois",day:"jour"},
+  m:{is_set:"est_défini",length:"longueur",first:"premier",last:"dernier",initials:"initiales",upper:"majuscules",join:"joindre",one_of:"parmi"},
+  b:{em:"italique",link:"lien",if_set:"si_présent"}
+};
+const INV = {f:{},m:{},b:{}};
+for(const k of ["f","m","b"]) for(const [c,fr] of Object.entries(FR[k])) INV[k][fr]=c;
+const canon = (kind,name) => INV[kind][name] || name;
+let dialect = "fr";
+const loc = (kind,c,L=dialect) => L==="fr" ? (FR[kind][c]||c) : c;
+const kwd = (k,L=dialect) => L==="fr" ? FR.kw[k] : k;
+/* Les commentaires livrés avec l'atelier suivent la langue du script. */
+const COMMENTS=[
+  ["# Citation APA 7 abrégée — EPScript 2.0 (prototype)","# Short APA 7 citation — EPScript 2.0 (prototype)"],
+  ["# Une même règle, plusieurs langues : basculez entre Français et English.","# One rule, several languages: switch between Français and English."],
+  ["# Les fonctions sont réutilisables et testables seules.","# Functions are reusable and can be tested on their own."],
+  ["# Citation APA 7 abrégée — version simplifiée.","# Short APA 7 citation — simplified version."],
+  ["# La ponctuation est « magique » : espaces superflus retirés, points jamais doublés,","# Punctuation is “magic”: extra spaces removed, full stops never doubled,"],
+  ["# crochets et parenthèses vides supprimés. Plus besoin de tester chaque champ.","# empty brackets and parentheses dropped. No need to test every field."],
+  ["# Fonctions partagées par les règles de citation.","# Functions shared by the citation rules."],
+  ["# Les champs reconnus sont devenus des données ; le reste est du texte. Ajustez les détails.","# Recognised fields became data; the rest is text. Adjust the details."]
+];
+function swapComments(text,L){ const [a,b]=L==="en"?[0,1]:[1,0]; return text.split("\n").map(l=>{ const c=COMMENTS.find(x=>x[a]===l); return c?c[b]:l; }).join("\n"); }
+
+const DEFAULT_SRC = `# Citation APA 7 abrégée — EPScript 2.0 (prototype)
+# Une même règle, plusieurs langues : basculez entre Français et English.
+
+fonction nom_apa(p) = p.nom ++ ", " ++ p.prénom.initiales()
+
+# Les fonctions sont réutilisables et testables seules.
+fonction auteurs(liste) =
+  si liste.longueur() == 0 alors ""
+  sinon si liste.longueur() == 1 alors nom_apa(liste.premier())
+  sinon si liste.longueur() == 2 alors
+    nom_apa(liste.premier()) ++ " et " ++ nom_apa(liste.dernier())
+  sinon nom_apa(liste.premier()) ++ " et al."
+
+citation apa_abregee(notice) =
+  auteurs(notice.auteurs) ++ " (" ++ notice.date.année ++ "). "
+  ++ selon notice.type {
+       "thesis"  => italique(lien(notice.titre)) ++ " ["
+                    ++ notice.type_thèse ++ ", " ++ notice.établissement ++ "].",
+       "article" => lien(notice.titre) ++ ". " ++ italique(notice.revue)
+                    ++ (si notice.volume.est_défini() alors ", " ++ italique(notice.volume) sinon "")
+                    ++ (si notice.numéro.est_défini() alors "(" ++ notice.numéro ++ ")" sinon "")
+                    ++ ".",
+       "dataset" => italique(lien(notice.titre)) ++ " [Jeu de données]. "
+                    ++ notice.éditeur ++ ".",
+       autrement => italique(lien(notice.titre)) ++ "."
+     }
+  ++ (si notice.doi.est_défini() alors " https://doi.org/" ++ notice.doi sinon "")
+`;
+
+const SIMPLE_SRC = `# Citation APA 7 abrégée — version simplifiée.
+# La ponctuation est « magique » : espaces superflus retirés, points jamais doublés,
+# crochets et parenthèses vides supprimés. Plus besoin de tester chaque champ.
+
+fonction nom_apa(p) = p.nom ++ ", " ++ p.prénom.initiales()
+
+fonction auteurs(liste) =
+  si liste.longueur() > 2 alors nom_apa(liste.premier()) ++ " et al."
+  sinon si liste.longueur() == 2 alors nom_apa(liste.premier()) ++ " et " ++ nom_apa(liste.dernier())
+  sinon si liste.longueur() == 1 alors nom_apa(liste.premier())
+  sinon ""
+
+citation apa_abregee(notice) =
+  auteurs(notice.auteurs) ++ " (" ++ notice.date.année ++ "). "
+  ++ selon notice.type {
+       "thesis"  => italique(lien(notice.titre)) ++ " [" ++ notice.type_thèse ++ ", " ++ notice.établissement ++ "].",
+       "article" => lien(notice.titre) ++ ". " ++ italique(notice.revue) ++ ", " ++ italique(notice.volume) ++ "(" ++ notice.numéro ++ ").",
+       "dataset" => italique(lien(notice.titre)) ++ " [Jeu de données]. " ++ notice.éditeur ++ ".",
+       autrement => italique(lien(notice.titre)) ++ "."
+     }
+  ++ si_présent(notice.doi, " https://doi.org/")
+`;
+
+/* ---------- Analyse lexicale ---------- */
+class EpsError extends Error { constructor(msg, line, col, start){ super(msg); this.line=line; this.col=col; this.start=start; } }
+function lex(src){
+  const toks=[]; const comments=[]; let i=0, line=1, col=1;
+  const adv=n=>{ i+=n; col+=n; };
+  const pushT=o=>{ o.end=i; toks.push(o); };
+  while(i<src.length){
+    const ch=src[i];
+    if(ch==="\n"){ i++; line++; col=1; continue; }
+    if(/\s/.test(ch)){ adv(1); continue; }
+    if(ch==="#"){ const c0=i, cl=line; while(i<src.length && src[i]!=="\n") adv(1); comments.push({line:cl, text:src.slice(c0,i)}); continue; }
+    const l=line, c=col, s=i;
+    if(ch==='"'){
+      let v=""; adv(1);
+      while(i<src.length && src[i]!=='"'){
+        if(src[i]==="\n") throw new EpsError(T("Chaîne non terminée","Unterminated string"), l, c, s);
+        if(src[i]==="\\" && i+1<src.length){ v+=src[i+1]; adv(2); continue; }
+        v+=src[i]; adv(1);
+      }
+      if(i>=src.length) throw new EpsError(T("Chaîne non terminée","Unterminated string"), l, c, s);
+      adv(1); pushT({type:"str", value:v, line:l, col:c, start:s}); continue;
+    }
+    let m;
+    if((m=/^[0-9]+/.exec(src.slice(i,i+20)))){ adv(m[0].length); pushT({type:"num", value:Number(m[0]), line:l, col:c, start:s}); continue; }
+    if((m=/^[A-Za-z_À-ſ][A-Za-z0-9_À-ſ]*/.exec(src.slice(i,i+80)))){
+      adv(m[0].length); const kw=Object.prototype.hasOwnProperty.call(KWMAP,m[0]); pushT({type:kw?"kw":"id", value:kw?KWMAP[m[0]]:m[0], line:l, col:c, start:s}); continue;
+    }
+    const two=src.slice(i,i+2);
+    if(["++","==","!=","=>",">=","<="].includes(two)){ adv(2); pushT({type:"op", value:two, line:l, col:c, start:s}); continue; }
+    if("()<>{}=,.[]".includes(ch)){ adv(1); pushT({type:"op", value:ch, line:l, col:c, start:s}); continue; }
+    throw new EpsError(T("Caractère inattendu ","Unexpected character ")+Q(ch), l, c, s);
+  }
+  pushT({type:"eof", value:null, line, col, start:i});
+  toks.comments=comments;
+  return toks;
+}
+
+/* ---------- Analyse syntaxique ---------- */
+function parse(src){
+  const t=lex(src); let p=0; const pending=t.comments.slice();
+  const peek=()=>t[p], next=()=>t[p++];
+  const is=(type,value)=>t[p].type===type && (value===undefined || t[p].value===value);
+  const desc=tk=>tk.type==="eof"?T("la fin du fichier","the end of the file"):Q(tk.value);
+  const expect=(type,value,what)=>{ if(!is(type,value)){ const tk=peek(); throw new EpsError(T("Attendu ","Expected ")+(what||Q(value))+T(", trouvé ",", found ")+desc(tk), tk.line, tk.col, tk.start); } return next(); };
+  const at=(tk,o)=>Object.assign(o,{line:tk.line, col:tk.col, start:tk.start, end:(p>0?t[p-1].end:tk.end)});
+
+  function program(){
+    const defs=[];
+    while(!is("eof")){
+      if(is("kw","fn")||is("kw","citation")) defs.push(def());
+      else { const tk=peek(); throw new EpsError(T(`Attendu ${Q("fonction")} ou ${Q("citation")}, trouvé `,`Expected ${Q("fn")} or ${Q("citation")}, found `)+desc(tk), tk.line, tk.col, tk.start); }
+    }
+    return defs;
+  }
+  function def(){
+    const kw=next(); const comments=[]; let lastC=0; while(pending.length && pending[0].line<kw.line){ lastC=pending[0].line; comments.push(pending.shift().text); }
+    if(comments.length && kw.line-lastC>1) comments.push("");
+    const name=expect("id",undefined,"un nom").value;
+    expect("op","("); const params=[];
+    if(!is("op",")")){ do { params.push(expect("id",undefined,T("un paramètre","a parameter")).value); } while(is("op",",") && next()); }
+    expect("op",")"); expect("op","=");
+    return at(kw,{k:"Def", kind:kw.value, name, params, body:expr(), comments});
+  }
+  function expr(){ return concat(); }
+  function concat(){
+    const first=peek(); const parts=[or()];
+    while(is("op","++")){ next(); parts.push(or()); }
+    return parts.length===1?parts[0]:at(first,{k:"Concat", parts});
+  }
+  function or(){ let l=and(); while(is("kw","or")){ const tk=next(); l=at(tk,{k:"Bin",op:"or",l,r:and()}); } return l; }
+  function and(){ let l=cmp(); while(is("kw","and")){ const tk=next(); l=at(tk,{k:"Bin",op:"and",l,r:cmp()}); } return l; }
+  function cmp(){
+    const l=unary();
+    if(t[p].type==="op" && ["==","!=",">","<",">=","<="].includes(t[p].value)){ const tk=next(); return at(tk,{k:"Bin",op:tk.value,l,r:unary()}); }
+    return l;
+  }
+  function unary(){ if(is("kw","not")){ const tk=next(); return at(tk,{k:"Not",e:unary()}); } return postfix(); }
+  function args(){
+    expect("op","("); const a=[];
+    if(!is("op",")")){ do { a.push(expr()); } while(is("op",",") && next()); }
+    expect("op",")"); return a;
+  }
+  function postfix(){
+    let e=primary();
+    while(is("op",".")){
+      next(); const nt=expect("id",undefined,T("un nom de champ ou de méthode","a field or method name"));
+      e = is("op","(") ? at(nt,{k:"Method",obj:e,name:canon("m",nt.value),args:args()}) : at(nt,{k:"Field",obj:e,name:canon("f",nt.value)});
+    }
+    return e;
+  }
+  function primary(){
+    const tk=peek();
+    if(tk.type==="str"){ next(); return at(tk,{k:"Str",v:tk.value}); }
+    if(tk.type==="num"){ next(); return at(tk,{k:"Num",v:tk.value}); }
+    if(tk.type==="id"){ next(); if(is("op","(")){ const cn=canon("b",tk.value); return at(tk,{k:"Call",name:(cn in BUILTINS)?cn:tk.value,args:args()}); } return at(tk,{k:"Var",name:tk.value}); }
+    if(is("op","(")){ next(); const e=expr(); expect("op",")"); return e; }
+    if(is("kw","if")){
+      next(); const c=expr(); expect("kw","then"); const a=expr(); expect("kw","else"); const b=expr();
+      return at(tk,{k:"If",c,a,b});
+    }
+    if(is("kw","match")){
+      next(); const subj=expr(); expect("op","{"); const arms=[];
+      while(!is("op","}")){
+        const pt=peek(); let pat;
+        if(pt.type==="str"){ next(); pat=pt.value; }
+        else if(pt.type==="id" && ["_","autrement","otherwise"].includes(pt.value)){ next(); pat=null; }
+        else throw new EpsError(T(`Attendu un motif (texte, ${Q("autrement")} ou ${Q("_")}), trouvé `,`Expected a pattern (text, ${Q("otherwise")} or ${Q("_")}), found `)+desc(pt), pt.line, pt.col, pt.start);
+        expect("op","=>"); arms.push(at(pt,{pat, e:expr()}));
+        if(is("op",",")) next(); else if(!is("op","}")){ const x=peek(); throw new EpsError(T(`Attendu ${Q(",")} ou ${Q("}")}, trouvé `,`Expected ${Q(",")} or ${Q("}")}, found `)+desc(x), x.line, x.col, x.start); }
+      }
+      next(); return at(tk,{k:"Match",subj,arms});
+    }
+    throw new EpsError(T("Expression attendue, trouvé ","Expression expected, found ")+desc(tk), tk.line, tk.col, tk.start);
+  }
+  return program();
+}
+
+/* ---------- Vérification de types ---------- */
+function lev(a,b){ const d=Array.from({length:a.length+1},(_,i)=>[i]); for(let j=1;j<=b.length;j++) d[0][j]=j;
+  for(let i=1;i<=a.length;i++) for(let j=1;j<=b.length;j++) d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1)); return d[a.length][b.length]; }
+function suggest(name, options){ let best=null, bd=3; for(const o of options){ const d=lev(name,o); if(d<bd){ bd=d; best=o; } } return best?T(` Vouliez-vous dire ${Q(best)} ?`,` Did you mean ${Q(best)}?`):""; }
+
+function check(defs){
+  const errs=[]; const fns={};
+  for(const d of defs){ if(fns[d.name]) errs.push(new EpsError(T(`${Q(d.name)} est défini deux fois`,`${Q(d.name)} is defined twice`), d.line, d.col, d.start)); fns[d.name]=d; }
+  if(!defs.some(d=>d.kind==="citation")) errs.push(new EpsError(T(`Aucune ${Q("citation")} n'est définie`,`No ${Q("citation")} is defined`), 1, 1, 0));
+  const fieldsOf=ty=>{
+    if(ty==="record") return SCHEMA.record; if(ty==="person") return SCHEMA.person; if(ty==="date") return SCHEMA.date; return null;
+  };
+  function ty(n, env){
+    switch(n.k){
+      case "Str": return "str"; case "Num": return "num";
+      case "Var": if(!(n.name in env)){ errs.push(new EpsError(T(`Variable inconnue ${Q(n.name)}.`,`Unknown variable ${Q(n.name)}.`)+suggest(n.name,Object.keys(env)), n.line, n.col, n.start)); return "any"; } return env[n.name];
+      case "Field": {
+        let o=ty(n.obj, env); let list=false;
+        if(o && o.list){ list=true; o=o.list; }
+        const f=fieldsOf(o);
+        if(!f) return "any";
+        if(!(n.name in f)){ errs.push(new EpsError(T(`Champ inconnu ${Q(loc("f",n.name))} pour ${o==="record"?"une notice":o==="person"?"une personne":"une date"}.`,`Unknown field ${Q(loc("f",n.name))} for ${o==="record"?"a record":o==="person"?"a person":"a date"}.`)+suggest(n.name,Object.keys(f).map(k=>loc("f",k))), n.line, n.col, n.start)); return "any"; }
+        const r=f[n.name]; return list ? {list:r} : r;
+      }
+      case "Method": {
+        const o=ty(n.obj, env); n.args.forEach(a=>ty(a,env));
+        if(!(n.name in METHODS)){ errs.push(new EpsError(T(`Méthode inconnue ${Q(loc("m",n.name)+"()")}.`,`Unknown method ${Q(loc("m",n.name)+"()")}.`)+suggest(n.name,Object.keys(METHODS).map(k=>loc("m",k))), n.line, n.col, n.start)); return "any"; }
+        const ar=METHODS[n.name]; if(ar>=0 && n.args.length!==ar) errs.push(new EpsError(T(`${Q(loc("m",n.name)+"()")} attend ${ar} argument(s), reçu ${n.args.length}`,`${Q(loc("m",n.name)+"()")} takes ${ar} argument(s), got ${n.args.length}`), n.line, n.col, n.start));
+        if((n.name==="first"||n.name==="last") && o && o.list) return o.list;
+        if(n.name==="is_set") return "bool"; if(n.name==="length") return "num";
+        return "any";
+      }
+      case "Call": {
+        n.args.forEach(a=>ty(a,env));
+        if(n.name in BUILTINS){
+          const nm=loc("b",n.name);
+          if(n.name==="if_set"){ if(n.args.length<2||n.args.length>3) errs.push(new EpsError(T(`${Q(nm+"()")} attend 2 ou 3 arguments : valeur, avant, après`,`${Q(nm+"()")} takes 2 or 3 arguments: value, before, after`), n.line, n.col, n.start)); }
+          else if(n.args.length!==BUILTINS[n.name]) errs.push(new EpsError(T(`${Q(nm+"()")} attend ${BUILTINS[n.name]} argument`,`${Q(nm+"()")} takes ${BUILTINS[n.name]} argument`), n.line, n.col, n.start));
+          return "rich"; }
+        const f=fns[n.name];
+        if(!f){ errs.push(new EpsError(T(`Fonction inconnue ${Q(n.name+"()")}.`,`Unknown function ${Q(n.name+"()")}.`)+suggest(n.name,[...Object.keys(fns),...Object.keys(BUILTINS).map(k=>loc("b",k))]), n.line, n.col, n.start)); return "any"; }
+        if(f.params.length!==n.args.length) errs.push(new EpsError(T(`${Q(n.name+"()")} attend ${f.params.length} argument(s), reçu ${n.args.length}`,`${Q(n.name+"()")} takes ${f.params.length} argument(s), got ${n.args.length}`), n.line, n.col, n.start));
+        return "any";
+      }
+      case "Concat": n.parts.forEach(x=>ty(x,env)); return "rich";
+      case "If": ty(n.c,env); ty(n.a,env); ty(n.b,env); return "any";
+      case "Match": ty(n.subj,env); n.arms.forEach(a=>ty(a.e,env)); return "any";
+      case "Bin": ty(n.l,env); ty(n.r,env); return "bool";
+      case "Not": ty(n.e,env); return "bool";
+    }
+    return "any";
+  }
+  const ptypes=inferParamTypes(defs); // types des paramètres déduits des appels : auteurs(notice.auteurs) → liste de personnes
+  for(const d of defs){
+    const env={}; d.params.forEach((pn,i)=>env[pn]=(ptypes[d.name]&&ptypes[d.name][i])||"any");
+    if(d.kind==="citation"){ if(d.params.length!==1) errs.push(new EpsError(T("Une citation reçoit exactement un paramètre : la notice","A citation takes exactly one parameter: the record"), d.line, d.col, d.start)); if(d.params[0]) env[d.params[0]]="record"; }
+    ty(d.body, env);
+  }
+  return {errs, fns};
+}
+
+/* ---------- Exécution isolée ---------- */
+const isRich=v=>v && typeof v==="object" && Array.isArray(v.rich);
+function plain(v){
+  if(v==null) return ""; if(isRich(v)) return v.rich.map(s=>s.t==="text"?s.v:plain({rich:s.c})).join("");
+  if(Array.isArray(v)) return v.map(plain).filter(Boolean).join(", ");
+  if(typeof v==="object"){ if("family" in v) return [v.family,v.given].filter(Boolean).join(", "); if("year" in v) return String(v.year); return ""; }
+  return String(v);
+}
+function toRich(v){ if(isRich(v)) return v.rich; const s=plain(v); return s?[{t:"text",v:s}]:[]; }
+function truthy(v){ if(v==null||v===false||v==="") return false; if(Array.isArray(v)) return v.length>0; if(isRich(v)) return plain(v)!==""; return true; }
+function initials(s){ return String(s||"").split(/\s+/).filter(Boolean).map(w=>w.split("-").map(x=>x? x[0].toUpperCase()+".":"").join("-")).join(" "); }
+
+function run(fns, citationName, record){
+  let steps=0, depth=0; const LIMIT_STEPS=50000, LIMIT_DEPTH=64;
+  function ev(n, env){
+    if(++steps>LIMIT_STEPS) throw new EpsError(T(`Arrêt du bac à sable : plus de ${LIMIT_STEPS} étapes`,`Sandbox stop: more than ${LIMIT_STEPS} steps`), n.line, n.col, n.start);
+    switch(n.k){
+      case "Str": case "Num": return n.v;
+      case "Var": return env[n.name];
+      case "Field": {
+        const o=ev(n.obj,env);
+        if(o==null) return null;
+        if(Array.isArray(o)) return o.map(x=>x==null?null:x[n.name]).filter(x=>x!=null);
+        return typeof o==="object" ? (o[n.name] ?? null) : null;
+      }
+      case "Method": {
+        const o=ev(n.obj,env), a=n.args.map(x=>ev(x,env));
+        switch(n.name){
+          case "is_set": return truthy(o);
+          case "length": return Array.isArray(o)?o.length:plain(o).length;
+          case "first": return Array.isArray(o)?(o[0]??null):o;
+          case "last": return Array.isArray(o)?(o[o.length-1]??null):o;
+          case "initials": return initials(plain(o));
+          case "upper": return plain(o).toUpperCase();
+          case "join": return (Array.isArray(o)?o:[o]).map(plain).filter(Boolean).join(plain(a[0]));
+          case "one_of": return a.map(plain).includes(plain(o));
+        }
+        return null;
+      }
+      case "Call": {
+        const a=n.args.map(x=>ev(x,env));
+        if(n.name==="em") return {rich:[{t:"em",c:toRich(a[0])}]};
+        if(n.name==="if_set") return truthy(a[0]) ? {rich:[...toRich(a[1]),...toRich(a[0]),...toRich(a[2])]} : "";
+        if(n.name==="link") return {rich:[{t:"link",c:toRich(a[0])}]};
+        const f=fns[n.name];
+        if(++depth>LIMIT_DEPTH) throw new EpsError(T(`Arrêt du bac à sable : récursion de plus de ${LIMIT_DEPTH} niveaux dans ${Q(n.name+"()")}`,`Sandbox stop: recursion deeper than ${LIMIT_DEPTH} levels in ${Q(n.name+"()")}`), n.line, n.col, n.start);
+        const e2={}; f.params.forEach((pn,i)=>e2[pn]=a[i]);
+        const r=ev(f.body,e2); depth--; return r;
+      }
+      case "Concat": return {rich:n.parts.flatMap(x=>toRich(ev(x,env)))};
+      case "If": return truthy(ev(n.c,env)) ? ev(n.a,env) : ev(n.b,env);
+      case "Match": {
+        const s=plain(ev(n.subj,env));
+        for(const arm of n.arms) if(arm.pat===null || arm.pat===s) return ev(arm.e,env);
+        return null;
+      }
+      case "Bin": {
+        if(n.op==="and") return truthy(ev(n.l,env)) && truthy(ev(n.r,env));
+        if(n.op==="or") return truthy(ev(n.l,env)) || truthy(ev(n.r,env));
+        const l=ev(n.l,env), r=ev(n.r,env);
+        if(n.op==="==") return plain(l)===plain(r); if(n.op==="!=") return plain(l)!==plain(r);
+        const ln=Number(plain(l)), rn=Number(plain(r));
+        return n.op===">"?ln>rn : n.op==="<"?ln<rn : n.op===">="?ln>=rn : ln<=rn;
+      }
+      case "Not": return !truthy(ev(n.e,env));
+    }
+    return null;
+  }
+  const c=fns[citationName]; const env={}; env[c.params[0]]=record;
+  return ev(c.body, env);
+}
+
+/* ---------- Ponctuation magique ---------- */
+// Normalise la sortie d'une citation, à travers les frontières de style (italique, lien) :
+// espaces superflus, points jamais doublés, espace après la ponctuation, crochets et parenthèses vides,
+// séparateurs orphelins. Les URL (dont les DOI) sont protégées.
+function flattenRich(segs, st=""){
+  const out=[];
+  for(const g of segs){
+    if(g.t==="text") for(const ch of g.v) out.push({ch, st});
+    else out.push(...flattenRich(g.c, st?st+">"+g.t:g.t));
+  }
+  return out;
+}
+function rebuildRich(chars){
+  const out=[]; let i=0;
+  while(i<chars.length){
+    let j=i, v=""; while(j<chars.length && chars[j].st===chars[i].st){ v+=chars[j].ch; j++; }
+    let node={t:"text",v}; const st=chars[i].st;
+    if(st) for(const t of st.split(">").reverse()) node={t,c:[node]};
+    out.push(node); i=j;
+  }
+  return out;
+}
+function magicPunct(segs){
+  let chars=flattenRich(segs).map(c=>({...c, ch:/\s/.test(c.ch)?" ":c.ch}));
+  const isSp=c=>c && c.ch===" ";
+  for(let pass=0; pass<6; pass++){
+    const plain=chars.map(c=>c.ch).join(""); const prot=new Array(chars.length).fill(false);
+    for(const m of plain.matchAll(/https?:\/\/\S+|doi:\S+/gi)) for(let k=m.index;k<m.index+m[0].length;k++) prot[k]=true;
+    chars.forEach((c,k)=>c.p=prot[k]);
+    const out=[]; const last=()=>out[out.length-1];
+    for(const c of chars){
+      const ch=c.ch;
+      if(!c.p){
+        if(ch===" " && (out.length===0 || isSp(last()) || "([".includes(last().ch))) continue;      // espaces superflus
+        if(".,;:)]".includes(ch) && isSp(last()) && !last().p) out.pop();                           // pas d'espace avant
+        if(".)]".includes(ch) && last() && ",;:".includes(last().ch) && !last().p){                 // séparateur orphelin
+          out.pop(); if(isSp(last())) out.pop(); }
+        if(",;:".includes(ch) && (out.length===0 || "([,;:.".includes(last().ch))) continue;       // séparateur en tête ou doublé
+        if(ch==="." && last() && ".!?…".includes(last().ch) && !(out.length>1 && out[out.length-2].ch===".")) continue; // point magique
+        if((ch===")"&&last()&&last().ch==="(") || (ch==="]"&&last()&&last().ch==="[")){ out.pop(); continue; } // vides
+        if(ch!==" " && last() && !last().p && /[A-ZÀ-Ý]/.test(ch) && last().ch===".") out.push({ch:" ", st:c.st, p:false}); // espace après le point
+        if(ch!==" " && last() && !last().p && /[\p{L}\p{N}(\[]/u.test(ch) && ",;:".includes(last().ch)) out.push({ch:" ", st:c.st, p:false});
+      }
+      out.push(c);
+    }
+    while(isSp(out[out.length-1])) out.pop();
+    const changed = out.length!==chars.length || out.some((c,k)=>c.ch!==chars[k].ch);
+    chars=out; if(!changed) break;
+  }
+  return rebuildRich(chars);
+}
+let magic=true, showSpaces=true;
+
+/* ---------- Rendus ---------- */
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function richHTML(segs, href){
+  return segs.map(s=> s.t==="text" ? esc(s.v) : s.t==="em" ? `<em>${richHTML(s.c,href)}</em>` : `<a href="${esc(href)}">${richHTML(s.c,href)}</a>`).join("");
+}
+const TYPE_LABEL={};
+function setTypeLabels(){ Object.assign(TYPE_LABEL, UIL==="en"?{thesis:"Thesis",article:"Article",dataset:"Dataset"}:{thesis:"Thèse",article:"Article",dataset:"Jeu de données"}); }
+setTypeLabels();
+const SCHEMA_TYPE={thesis:"Thesis",article:"ScholarlyArticle",dataset:"Dataset"};
+const isoDate=d=>d? `${d.year}${d.month?"-"+String(d.month).padStart(2,"0"):""}` : "";
+
+function jsonld(r){
+  const o={"@context":"https://schema.org","@type":SCHEMA_TYPE[r.type]||"CreativeWork","@id":BASE+r.id,"name":r.title,
+    "author":r.creators.map(p=>Object.assign({"@type":"Person","familyName":p.family,"givenName":p.given}, p.orcid?{"@id":"https://orcid.org/"+p.orcid}:{})),
+    "datePublished":isoDate(r.date),"inLanguage":r.language,"license":r.license,"abstract":r.abstract};
+  if(r.doi) o.identifier="https://doi.org/"+r.doi;
+  if(r.type==="article") o.isPartOf={"@type":"Periodical","name":r.publication,"volumeNumber":r.volume,"issueNumber":r.number};
+  if(r.type==="thesis") o.sourceOrganization={"@type":"Organization","name":r.institution};
+  if(r.type==="dataset") o.publisher={"@type":"Organization","name":r.publisher};
+  return JSON.stringify(o,null,2);
+}
+function frameHTML(r, citeHTML){
+  const people=r.creators.map(p=>`    <li>${p.orcid?`<a href="https://orcid.org/${esc(p.orcid)}">`:""}${esc(p.family)}, ${esc(p.given)}${p.orcid?"</a>":""}</li>`).join("\n");
+  const rows=[["Type",TYPE_LABEL[r.type]],["Date",`<time datetime="${isoDate(r.date)}">${isoDate(r.date)}</time>`],
+    r.doi?["DOI",`<a href="https://doi.org/${esc(r.doi)}">${esc(r.doi)}</a>`]:null,["Licence",`<a href="${esc(r.license)}">${esc(r.license.replace(/^https:\/\/creativecommons.org\/licenses\//,"CC ").replace(/\/$/,"").toUpperCase())}</a>`]].filter(Boolean)
+    .map(([k,v])=>`    <dt>${k}</dt><dd>${v}</dd>`).join("\n");
+  return `<article lang="${esc(r.language)}">
+  <h1>${esc(r.title)}</h1>
+  <ul aria-label="${T("Auteurs","Authors")}">
+${people}
+  </ul>
+  <dl>
+${rows}
+  </dl>
+  <section>
+    <h2>${T("Résumé","Abstract")}</h2>
+    <p>${esc(r.abstract)}</p>
+  </section>
+  <section>
+    <h2>${T("Citer","Cite")}</h2>
+    <p>${citeHTML}</p>
+  </section>
+</article>`;
+}
+function formHTML(r, citeHTML){
+  const people=r.creators.map(p=>`<span>${esc(p.given)} ${esc(p.family)}${p.orcid?`<span class="orcid">ORCID</span>`:""}</span>`).join("");
+  return `<article class="notice">
+    <span class="badge">${TYPE_LABEL[r.type]}</span>
+    <h3>${esc(r.title)}</h3>
+    <div class="people">${people}</div>
+    <div class="meta">
+      <div><span>${T("Publié","Published")}</span><span>${isoDate(r.date)}</span></div>
+      <div><span>${T("Langue","Language")}</span><span>${r.language==="fr"?T("Français","French"):esc(r.language)}</span></div>
+      <div><span>DOI</span><span>${r.doi?esc(r.doi):"—"}</span></div>
+      <div><span>${T("Licence","Licence")}</span><span>${esc(r.license.replace(/^https:\/\/creativecommons.org\/licenses\//,"CC ").replace(/\/4\.0\/$/," 4.0").toUpperCase())}</span></div>
+    </div>
+    <p class="abstract">${esc(r.abstract)}</p>
+    <div class="citebox"><span class="accept">${T("Citer (APA 7, abrégée)","Cite (APA 7, short)")}</span><div class="cite">${citeHTML}</div></div>
+    <div class="dl"><span>PDF</span><span>${T("Texte intégral","Full text")}</span><span>JSON-LD</span><span>CSL-JSON</span><span>BibTeX</span></div>
+  </article>`;
+}
+
+/* ---------- Impression dans un dialecte (comme AppleScript) ---------- */
+const W=100;
+const PREC={or:1,and:2,"==":3,"!=":3,">":3,"<":3,">=":3,"<=":3};
+function printProgram(defs, L){
+  const q=v=>'"'+String(v).replace(/\\/g,"\\\\").replace(/"/g,'\\"')+'"';
+  function post(n,ind){ return ["Var","Field","Method","Call","Str","Num"].includes(n.k) ? ex(n,ind) : "("+ex(n,ind)+")"; }
+  function opnd(n,ind,parent){ if(n.k==="Concat"||n.k==="If"||n.k==="Match") return "("+ex(n,ind)+")";
+    if(n.k==="Bin" && PREC[n.op]<=PREC[parent] && !(n.op===parent && (parent==="and"||parent==="or"))) return "("+ex(n,ind)+")"; return ex(n,ind); }
+  function ex(n,ind){
+    switch(n.k){
+      case "Str": return q(n.v);
+      case "Num": return String(n.v);
+      case "Var": return n.name;
+      case "Field": return post(n.obj,ind)+"."+loc("f",n.name,L);
+      case "Method": return post(n.obj,ind)+"."+loc("m",n.name,L)+"("+n.args.map(a=>ex(a,ind)).join(", ")+")";
+      case "Call": return ((n.name in BUILTINS)?loc("b",n.name,L):n.name)+"("+n.args.map(a=>ex(a,ind)).join(", ")+")";
+      case "Bin": { const op=(n.op==="and"||n.op==="or")?kwd(n.op,L):n.op; return opnd(n.l,ind,n.op)+" "+op+" "+opnd(n.r,ind,n.op); }
+      case "Not": return kwd("not",L)+" "+opnd(n.e,ind,"and");
+      case "If": {
+        const in2=ind+"  ";
+        if(n.b.k!=="If"){
+          const one=kwd("if",L)+" "+ex(n.c,in2)+" "+kwd("then",L)+" "+ex(n.a,in2)+" "+kwd("else",L)+" "+ex(n.b,in2);
+          if(!one.includes("\n") && ind.length+one.length+2<=W) return one;
+        }
+        const branch=(head,a)=>{ const A=ex(a,in2); return (!A.includes("\n") && ind.length+head.length+1+A.length<=W) ? head+" "+A : head+"\n"+in2+A; };
+        let out=branch(kwd("if",L)+" "+ex(n.c,in2)+" "+kwd("then",L), n.a); let cur=n.b;
+        while(cur.k==="If"){ out+="\n"+ind+branch(kwd("else",L)+" "+kwd("if",L)+" "+ex(cur.c,in2)+" "+kwd("then",L), cur.a); cur=cur.b; }
+        return out+"\n"+ind+branch(kwd("else",L), cur);
+      }
+      case "Match": {
+        const wild=L==="fr"?"autrement":"_";
+        return kwd("match",L)+" "+ex(n.subj,ind)+" {\n"+n.arms.map(a=>{ const head=ind+"  "+(a.pat===null?wild:q(a.pat))+" => "; return head+ex(a.e," ".repeat(head.length)); }).join(",\n")+"\n"+ind+"}";
+      }
+      case "Concat": {
+        const parts=n.parts.map(x=> x.k==="If" ? "("+ex(x,ind+"  ")+")" : ex(x,ind));
+        const one=parts.join(" ++ ");
+        if(!one.includes("\n") && ind.length+one.length<=W) return one;
+        let out=parts[0];
+        for(const pt of parts.slice(1)){
+          const last=out.split("\n").pop(); const lastLen=out.includes("\n")?last.length:ind.length+last.length;
+          if(!pt.includes("\n") && lastLen+4+pt.length<=W && !out.endsWith("}")) out+=" ++ "+pt;
+          else out+="\n"+ind+"++ "+pt;
+        }
+        return out;
+      }
+    }
+    return "";
+  }
+  return defs.map(d=>{
+    const head=kwd(d.kind,L)+" "+d.name+"("+d.params.join(", ")+") =";
+    const b=ex(d.body,"  ");
+    const body=(!b.includes("\n") && head.length+1+b.length<=W) ? head+" "+b : head+"\n  "+b;
+    return (d.comments.length?d.comments.join("\n")+"\n":"")+body;
+  }).join("\n\n")+"\n";
+}
+function structureHash(defs){
+  const j=JSON.stringify(defs,(k,v)=>["line","col","start","end","comments"].includes(k)?undefined:v);
+  let h=0x811c9dc5; for(let i=0;i<j.length;i++){ h^=j.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; }
+  return h.toString(16).padStart(8,"0");
+}
+
+/* ---------- Vue en blocs ---------- */
+// Vue en blocs alignée sur le texte : même mise en page ligne à ligne que le code,
+// les « si » et « selon » encadrés. Les boîtes portent la portée (data-start / data-end).
+function printHTML(defs,L){
+  const W=100;
+  const tok=(t,cls)=>({t, h:`<span class="tok ${cls||""}">${esc(t)}</span>`});
+  const cat=(...xs)=>({t:xs.map(x=>x.t).join(""), h:xs.map(x=>x.h).join("")});
+  const ml=x=>x.t.includes("\n");
+  const nl=ind=>({t:"\n"+ind, h:"\n"+ind});
+  const SP=tok(" ");
+  const K=k=>tok(kwd(k,L),"kw");
+  const str=(v,start)=>{ const inner = v==="" ? `<span class="empty">${T("vide","empty")}</span>`
+      : showSpaces ? esc(v).replace(/ /g,'<span class="sp"> </span>') : esc(v);
+    return {t:JSON.stringify(v), h:`<span class="tok s-lit" data-start="${start}" title="${esc(JSON.stringify(v))}">${inner}</span>`}; };
+  const box=(x,cls,n)=>({t:x.t, h:`<span class="bx ${cls}" data-start="${n.start}" data-end="${n.end}">${x.h}</span>`});
+  const hang=x=>({t:x.t, h:`<span class="hang">${x.h}</span>`});
+  const paren=x=>cat(tok("(","op"),x,tok(")","op"));
+  const args=(a,ind)=>{ const xs=[tok("(","op")]; a.forEach((x,i)=>{ if(i) xs.push(tok(", ","op")); xs.push(ex(x,ind)); }); xs.push(tok(")","op")); return cat(...xs); };
+  const post=(n,ind)=> ["Var","Field","Method","Call","Str","Num"].includes(n.k) ? ex(n,ind) : paren(ex(n,ind));
+  const opnd=(n,ind,parent)=>{ if(n.k==="Concat"||n.k==="If"||n.k==="Match") return paren(ex(n,ind));
+    if(n.k==="Bin" && PREC[n.op]<=PREC[parent] && !(n.op===parent&&(parent==="and"||parent==="or"))) return paren(ex(n,ind)); return ex(n,ind); };
+  function ex(n,ind,inParen){
+    switch(n.k){
+      case "Str": return str(n.v,n.start);
+      case "Num": return tok(String(n.v),"nm");
+      case "Var": return tok(n.name,"vr");
+      case "Field": return cat(post(n.obj,ind), tok("."+loc("f",n.name,L),"fd"));
+      case "Method": return cat(post(n.obj,ind), tok("."+loc("m",n.name,L),"mt"), args(n.args,ind));
+      case "Call": return cat(tok((n.name in BUILTINS)?loc("b",n.name,L):n.name,"fc"), args(n.args,ind));
+      case "Bin": { const kw=n.op==="and"||n.op==="or"; return cat(opnd(n.l,ind,n.op),SP,kw?K(n.op):tok(n.op,"op"),SP,opnd(n.r,ind,n.op)); }
+      case "Not": return cat(K("not"),SP,opnd(n.e,ind,"and"));
+      case "If": {
+        const in2="  ", wrap=x=>box(inParen?paren(x):x,"k-logic",n);
+        if(n.b.k!=="If"){ const one=cat(K("if"),SP,ex(n.c,in2),SP,K("then"),SP,ex(n.a,in2),SP,K("else"),SP,ex(n.b,in2));
+          if(!ml(one) && ind.length+one.t.length+2<=W) return wrap(one); }
+        const branch=(head,a)=>{ const A=ex(a,in2); return (!ml(A) && ind.length+head.t.length+1+A.t.length<=W) ? cat(head,SP,A) : cat(head,nl(in2),A); };
+        let x=branch(cat(K("if"),SP,ex(n.c,in2),SP,K("then")), n.a); let cur=n.b;
+        while(cur.k==="If"){ x=cat(x,nl(""),branch(cat(K("else"),SP,K("if"),SP,ex(cur.c,in2),SP,K("then")),cur.a)); cur=cur.b; }
+        return wrap(cat(x,nl(""),branch(K("else"),cur)));
+      }
+      case "Match": {
+        const wild=L==="fr"?"autrement":"_";
+        const arms=n.arms.map((a,i)=>cat(tok("  "), a.pat===null?tok(wild,"kw"):str(a.pat,n.start), tok(" => ","op"),
+          hang(cat(ex(a.e,""), i<n.arms.length-1?tok(",","op"):tok("")))));
+        let body=arms[0]; for(const a of arms.slice(1)) body=cat(body,nl(""),a);
+        return box(cat(K("match"),SP,ex(n.subj,""),tok(" {","op"),nl(""),body,nl(""),tok("}","op")),"k-logic",n);
+      }
+      case "Concat": {
+        const parts=n.parts.map(x=> x.k==="If" ? ex(x,"",true) : ex(x,ind));
+        const one=parts.map(x=>x.t).join(" ++ ");
+        if(!one.includes("\n") && ind.length+one.length<=W){ let o=parts[0]; for(const x of parts.slice(1)) o=cat(o,tok(" ++ ","op"),x); return o; }
+        let o=parts[0], prevMl=ml(parts[0]);
+        for(const x of parts.slice(1)){
+          const lastLen=o.t.split("\n").pop().length+(o.t.includes("\n")?0:ind.length);
+          if(!ml(x) && !prevMl && lastLen+4+x.t.length<=W) o=cat(o,tok(" ++ ","op"),x);
+          else o=cat(o,nl(ind),tok("++ ","op"),x);
+          prevMl=ml(x);
+        }
+        return o;
+      }
+    }
+    return tok("");
+  }
+  return defs.map(d=>{
+    const ps=[]; d.params.forEach((p,i)=>{ if(i) ps.push(tok(", ","op")); ps.push(tok(p,"vr")); });
+    const head=cat(K(d.kind),SP,tok(d.name,"fc"),tok("(","op"),...ps,tok(") =","op"));
+    const b=ex(d.body,"  ");
+    const body=(!ml(b) && head.t.length+1+b.t.length<=W) ? cat(head,SP,b) : cat(head,nl("  "),b);
+    const com=d.comments.filter(c=>c!=="").map(c=>`<span class="tok cm">${esc(c)}</span>\n`).join("");
+    return `${com}<div class="bx k-def" data-start="${d.start}" data-end="${d.end}">${body.h}</div>`;
+  }).join("");
+}
+
+// Coloration syntaxique de l'éditeur (couche sous le texte) ; « act » = portée active, le reste estompé.
+function hlHTML(text, act, errStarts, offset=0, tail=true){
+  const re=/(#[^\n]*)|("(?:[^"\\\n]|\\.)*"?)|([0-9]+)|([\p{L}_][\p{L}\p{N}_]*)|(\+\+|==|!=|=>|>=|<=|[()<>{}=,.\[\]])|(\s+)|([^])/gu;
+  let out="", m;
+  while((m=re.exec(text))){
+    const st=m.index+offset, v=m[0];
+    if(m[6]){ out+=v; continue; }
+    let cls;
+    if(m[1]) cls="cm"; else if(m[2]) cls="st"; else if(m[3]) cls="nm";
+    else if(m[4]){ const prev=text[m.index-1], nx=text[m.index+v.length];
+      if(Object.prototype.hasOwnProperty.call(KWMAP,v) || (["autrement","otherwise","_"].includes(v) && /^\s*=>/.test(text.slice(m.index+v.length,m.index+v.length+6)))) cls="kw";
+      else if(prev===".") cls= nx==="(" ? "mt" : "fd";
+      else if(nx==="(") cls="fc"; else cls="vr"; }
+    else if(m[5]) cls="op"; else cls="bad";
+    let inner=esc(v);
+    if(cls==="st" && showSpaces) inner=inner.replace(/ /g,'<span class="sp2"> </span>');
+    const isErr=errStarts && errStarts.has(st);
+    out+=`<span class="${cls}${isErr?" errtok":""}${act && !isErr && (st<act.start || st>=act.end) ? " dim" : ""}">${inner}</span>`;
+  }
+  return tail ? out+"\n " : out;
+}
+
+/* ---------- Prédiction de code (étage 1 : grammaire + schéma, sans modèle) ---------- */
+const TYPE_NAME={fr:{str:"texte",num:"nombre",date:"date",record:"notice",person:"personne",bool:"booléen",any:"valeur"},
+                 en:{str:"text",num:"number",date:"date",record:"record",person:"person",bool:"boolean",any:"value"}};
+function typeName(t,L=UIL){ if(t&&t.list) return (L==="fr"?"liste de ":"list of ")+typeName(t.list,L)+"s"; return TYPE_NAME[L][t]||TYPE_NAME[L].any; }
+const METHODS_BY_TYPE={list:["length","first","last","join","is_set"],str:["is_set","length","upper","initials","one_of"],
+  num:["is_set","one_of"],date:["is_set"],record:["is_set"],person:["is_set"],bool:[],any:Object.keys(METHODS)};
+const DOCS={
+  fr:{is_set:"vrai si la valeur existe",length:"nombre d'éléments ou de caractères",first:"premier élément",last:"dernier élément",
+      initials:"initiales d'un prénom",upper:"en majuscules",join:"joint une liste avec un séparateur",one_of:"vrai si la valeur est parmi celles données",
+      em:"met en italique",link:"lien vers la notice",if_set:"valeur entourée de texte, seulement si elle existe"},
+  en:{is_set:"true if the value exists",length:"number of items or characters",first:"first item",last:"last item",
+      initials:"initials of a given name",upper:"upper case",join:"joins a list with a separator",one_of:"true if the value is one of those given",
+      em:"italic",link:"link to the record",if_set:"value wrapped in text, only if it exists"}};
+const IDC=/[\p{L}\p{N}_]/u;
+function staticType(n,env){
+  switch(n.k){
+    case "Var": return env[n.name]||"any";
+    case "Field": { const o=staticType(n.obj,env); return (typeof o==="string"&&SCHEMA[o]&&SCHEMA[o][n.name])||"any"; }
+    case "Method": { const o=staticType(n.obj,env); if((n.name==="first"||n.name==="last")&&o&&o.list) return o.list;
+      if(n.name==="length") return "num"; if(n.name==="is_set"||n.name==="one_of") return "bool"; return "str"; }
+    case "Str": return "str"; case "Num": return "num";
+  }
+  return "any";
+}
+function eachNode(n,f){
+  if(!n||typeof n!=="object") return;
+  if(Array.isArray(n)){ n.forEach(x=>eachNode(x,f)); return; }
+  if(n.k) f(n);
+  for(const [k,v] of Object.entries(n)) if(k!=="comments" && v && typeof v==="object") eachNode(v,f);
+}
+// Type des paramètres de chaque fonction, déduit des appels (notice.auteurs → liste de personnes).
+function inferParamTypes(defs){
+  const pt={}; defs.forEach(d=>pt[d.name]=d.params.map(()=> d.kind==="citation"?"record":"any"));
+  for(let it=0;it<3;it++) for(const d of defs){
+    const env={}; d.params.forEach((p,i)=>env[p]=pt[d.name][i]);
+    eachNode(d.body,n=>{ if(n.k==="Call" && pt[n.name]) n.args.forEach((a,i)=>{ const t=staticType(a,env); if(t!=="any" && i<pt[n.name].length) pt[n.name][i]=t; }); });
+  }
+  return pt;
+}
+const fold=s=>s.normalize("NFD").replace(/[̀-ͯ]/g,"").toLowerCase();
+function matchTypeBlock(before){
+  const re=/(?:selon|match)\s+[^\n{]*\.type\s*\{/gu; let m, last=null; while((m=re.exec(before))) last=m;
+  if(!last) return null;
+  const after=before.slice(last.index+last[0].length); let depth=1, inStr=false;
+  for(const ch of after){ if(ch==='"') inStr=!inStr; else if(!inStr){ if(ch==="{") depth++; else if(ch==="}") depth--; } }
+  if(depth<=0) return null;
+  const covered=new Set([...after.matchAll(/"([^"]*)"\s*=>/g)].map(x=>x[1]));
+  return {covered, wildcard:/(^|[\s,{])(autrement|otherwise|_)\s*=>/u.test(after)};
+}
+// Retourne {start, end, items} : les suggestions à la position pos.
+function complete(text,pos,defs,forced){
+  const before=text.slice(0,pos);
+  const lineBefore=before.slice(before.lastIndexOf("\n")+1);
+  let inStr=false; for(const ch of lineBefore){ if(ch==='"') inStr=!inStr; else if(ch==="#"&&!inStr) return null; }
+  const pm=lineBefore.match(/("?)([\p{L}\p{N}_]*)$/u);
+  const quote=pm[1]==='"', prefix=pm[2], start=pos-pm[0].length;
+  if(inStr && !quote) return null;
+  const L=dialect, items=[];
+  const heads=[...before.matchAll(/^(fonction|fn|citation)\s+([\p{L}_][\p{L}\p{N}_]*)\s*\(([^)]*)\)/gmu)];
+  const cur=heads.length?heads[heads.length-1]:null;
+  const ptypes=defs?inferParamTypes(defs):{};
+  const env={};
+  if(cur){ const ps=cur[3].split(",").map(x=>x.trim()).filter(Boolean);
+    ps.forEach((p,i)=>env[p]= (ptypes[cur[2]]&&ptypes[cur[2]][i]) || (KWMAP[cur[1]]==="citation"?"record":"any")); }
+  const beforeStart=text.slice(0,start);
+  const member=!quote && beforeStart.endsWith(".");
+  const lineStart=/^\s*$/.test(lineBefore.slice(0,lineBefore.length-pm[0].length));
+  const mt=matchTypeBlock(before);
+  if(member){
+    const cm=beforeStart.match(/((?:[\p{L}_][\p{L}\p{N}_]*)(?:\([^()]*\))?(?:\.[\p{L}_][\p{L}\p{N}_]*(?:\([^()]*\))?)*)\.$/u);
+    if(!cm) return null;
+    const segs=[...cm[1].matchAll(/([\p{L}_][\p{L}\p{N}_]*)(\([^()]*\))?/gu)];
+    let t=env[segs[0][1]]||"any";
+    for(const sg of segs.slice(1)){
+      if(sg[2]!==undefined){ const m=canon("m",sg[1]); t=(m==="first"||m==="last")&&t&&t.list?t.list : m==="length"?"num" : (m==="is_set"||m==="one_of")?"bool" : "str"; }
+      else { const f=canon("f",sg[1]); t=(typeof t==="string"&&SCHEMA[t]&&SCHEMA[t][f])||"any"; }
+    }
+    if(typeof t==="string"&&SCHEMA[t]) for(const [f,ft] of Object.entries(SCHEMA[t])) items.push({kind:T("champ","field"),label:loc("f",f,L),insert:loc("f",f,L),detail:typeName(ft)});
+    const mk=t&&t.list?"list":(METHODS_BY_TYPE[t]?t:"any");
+    for(const m of METHODS_BY_TYPE[mk]){ const nm=loc("m",m,L); items.push({kind:T("méthode","method"),label:nm+"()",insert:nm+"()",back:METHODS[m]===0?0:1,detail:DOCS[UIL][m]}); }
+  } else {
+    const arms=[];
+    if(mt && lineStart){
+      for(const ty of Object.keys(TYPE_LABEL)) if(!mt.covered.has(ty)) arms.push({kind:T("cas manquant","missing case"),label:`"${ty}" =>`,insert:`"${ty}" => `,detail:TYPE_LABEL[ty],boost:2});
+      if(!mt.wildcard) arms.push({kind:T("cas","case"),label:(L==="fr"?"autrement":"_")+" =>",insert:(L==="fr"?"autrement":"_")+" => ",detail:T("tous les autres types","all other types"),boost:1});
+    }
+    if(quote){ items.push(...arms); }
+    else {
+      items.push(...arms);
+      const words=before.match(/[\p{L}_][\p{L}\p{N}_]*/gu)||[];
+      let lastKw=null; for(let i=words.length-1;i>=0;i--){ if(Object.prototype.hasOwnProperty.call(KWMAP,words[i])){ lastKw=KWMAP[words[i]]; break; } }
+      const kws=["if","then","else","match","and","or","not"].concat(lineStart&&!mt?["fn","citation"]:[]);
+      for(const k of kws) items.push({kind:T("mot-clé","keyword"),label:kwd(k,L),insert:kwd(k,L)+" ",
+        boost:(lastKw==="if"&&k==="then")||(lastKw==="then"&&k==="else")?2:0, detail:k==="then"&&lastKw==="if"?T("suite attendue","expected next"):""});
+      for(const [p,t] of Object.entries(env)) items.push({kind:T("paramètre","parameter"),label:p,insert:p,detail:typeName(t),boost:1});
+      if(defs) for(const d of defs) if(d.kind==="fn") items.push({kind:T("fonction","function"),label:d.name+"()",insert:d.name+"()",back:d.params.length?1:0,detail:"("+d.params.join(", ")+")"});
+      for(const b of Object.keys(BUILTINS)){ const nm=loc("b",b,L); items.push({kind:T("intégrée","built-in"),label:nm+"()",insert:nm+"()",back:1,detail:DOCS[UIL][b]}); }
+    }
+  }
+  const fp=fold(prefix);
+  let out=items.map((it,i)=>{ const fl=fold(it.label.replace(/^"/,"")); const r=fl.startsWith(fp)?0:fl.includes(fp)?1:9; return {it,r,i}; })
+    .filter(x=>x.r<9 && !(fp && fold(x.it.insert.trim())===fp)).sort((a,b)=>a.r-b.r||(b.it.boost||0)-(a.it.boost||0)||a.i-b.i).map(x=>x.it);
+  const auto = forced || member || prefix.length>=1 || (mt && lineStart && !quote && out.some(x=>x.boost===2&&x.kind!==T("mot-clé","keyword")));
+  if(!auto || !out.length) return null;
+  return {start, end:pos, items:out.slice(0,12)};
+}
+// Couverture : chaque « selon notice.type » doit traiter tous les types de notice, ou avoir « autrement ».
+function coverageWarnings(defs){
+  const w=[];
+  for(const d of defs) eachNode(d.body,n=>{
+    if(n.k!=="Match"||n.subj.k!=="Field"||n.subj.name!=="type") return;
+    const pats=n.arms.filter(a=>a.pat!==null).map(a=>a.pat), types=Object.keys(TYPE_LABEL);
+    for(const p of pats) if(!types.includes(p)) w.push({start:n.start,line:n.line,message:T(`${Q(p)} n'est pas un type de notice connu.`,`${Q(p)} is not a known record type.`)+suggest(p,types)});
+    if(!n.arms.some(a=>a.pat===null)){ const miss=types.filter(t=>!pats.includes(t));
+      if(miss.length) w.push({start:n.start,line:n.line,message:T(`Types non couverts par ${Q(kwd("match"))} : `,`Types not covered by ${Q(kwd("match"))}: `)+miss.map(t=>`${Q(t)} (${TYPE_LABEL[t]})`).join(", ")+T(`. Ajoutez un cas ou ${Q(dialect==="fr"?"autrement":"_")}.`,`. Add a case or ${Q(dialect==="fr"?"autrement":"_")}.`)}); }
+  });
+  return w;
+}
+
+/* ---------- Règle à partir d'exemples (programmation par l'exemple) ---------- */
+// L'utilisateur écrit la référence voulue pour une notice ; on y repère les valeurs des champs
+// et on en déduit une règle EPScript, qu'il ajuste ensuite. *texte* = italique.
+const N=(k,o)=>Object.assign({k},o);
+const V=n=>N("Var",{name:n}), F=(o,n)=>N("Field",{obj:o,name:n}), S=v=>N("Str",{v}), C=(n,...a)=>N("Call",{name:n,args:a}), M=(o,n,...a)=>N("Method",{obj:o,name:n,args:a});
+const NAME_FORMS=[
+  {id:"fam_init", fmt:p=>`${p.family}, ${initials(p.given)}`, ast:p=>[F(p,"family"),S(", "),M(F(p,"given"),"initials")]},
+  {id:"FAM_init", fmt:p=>`${p.family.toUpperCase()}, ${initials(p.given)}`, ast:p=>[M(F(p,"family"),"upper"),S(", "),M(F(p,"given"),"initials")]},
+  {id:"fam_given",fmt:p=>`${p.family}, ${p.given}`, ast:p=>[F(p,"family"),S(", "),F(p,"given")]},
+  {id:"FAM_given",fmt:p=>`${p.family.toUpperCase()}, ${p.given}`, ast:p=>[M(F(p,"family"),"upper"),S(", "),F(p,"given")]},
+  {id:"init_fam", fmt:p=>`${initials(p.given)} ${p.family}`, ast:p=>[M(F(p,"given"),"initials"),S(" "),F(p,"family")]},
+  {id:"given_fam",fmt:p=>`${p.given} ${p.family}`, ast:p=>[F(p,"given"),S(" "),F(p,"family")]}
+];
+const EX_FIELDS=["title","doi","publication","publisher","institution","thesis_type","volume","number","pages"];
+function parseExample(text){ // *…* → italique
+  let plainText="", em=[], on=false;
+  for(const ch of text.replace(/\s+/g," ").trim()){ if(ch==="*"){ on=!on; continue; } plainText+=ch; em.push(on); }
+  return {text:plainText, em, unclosed:on};
+}
+function findAll(hay,needle,short){
+  const out=[]; if(!needle) return out; let i=hay.indexOf(needle);
+  while(i>=0){ const a=hay[i-1], b=hay[i+needle.length];
+    if(!short || ((!a||!IDC.test(a)) && (!b||!IDC.test(b)))) out.push(i);
+    i=hay.indexOf(needle,i+1); }
+  return out;
+}
+function analyseExample(rec, raw){
+  const {text, em, unclosed}=parseExample(raw); const used=new Array(text.length).fill(false); const spans=[]; const notes=[];
+  const free=(i,n)=>{ for(let k=i;k<i+n;k++) if(used[k]) return false; return true; };
+  const take=(i,n,span)=>{ for(let k=i;k<i+n;k++) used[k]=true; spans.push(Object.assign({i,n},span)); };
+  // auteurs
+  let style=null;
+  const cr=rec.creators||[];
+  if(cr.length){
+    for(const form of NAME_FORMS){ const s=form.fmt(cr[0]); const i=text.indexOf(s); if(i>=0){ style={form,i,end:i+s.length,listed:1}; break; } }
+    if(style){
+      let end=style.end;
+      for(let k=1;k<cr.length;k++){
+        const s=style.form.fmt(cr[k]); const j=text.indexOf(s,end);
+        if(j<0 || j-end>6) break;
+        const sep=text.slice(end,j); if(k===cr.length-1) style.sepLast=sep; else style.sep=sep;
+        end=j+s.length; style.listed=k+1;
+      }
+      const etal=text.slice(end).match(/^,?\s*(et al\.?|& al\.?|et coll\.?)/);
+      if(etal){ style.etal=etal[0]; end+=etal[0].length; }
+      take(style.i,end-style.i,{kind:"authors"});
+      if(style.listed<cr.length && !style.etal) notes.push(T("auteurs : tous ne sont pas dans l'exemple, « et al. » ajouté par défaut","authors: not all are in the example, “et al.” added by default"));
+      if(style.listed>2 && style.listed===cr.length) notes.push(T("auteurs : liste complète de plus de deux noms, généralisée en « premier et al. » au-delà de deux (à ajuster)","authors: full list of more than two names, generalised to “first et al.” beyond two (adjust as needed)"));
+    } else notes.push(T("auteurs : aucun format de nom reconnu","authors: no name format recognised"));
+  }
+  // DOI, avec son préfixe
+  if(rec.doi){ for(const i of findAll(text,rec.doi,false)){ if(!free(i,rec.doi.length)) continue;
+    const pre=text.slice(0,i).match(/(\s?)(https?:\/\/(?:dx\.)?doi\.org\/|doi:\s?|DOI\s?:\s?)$/i);
+    const pi=pre?i-pre[0].length:i; if(pre && !free(pi,pre[0].length)) continue;
+    take(pi,i+rec.doi.length-pi,{kind:"doi",prefix:pre?pre[0]:""}); break; } }
+  // autres champs, du plus long au plus court
+  const cands=EX_FIELDS.filter(f=>rec[f]!=null&&rec[f]!=="").map(f=>({f,v:String(rec[f])}));
+  if(rec.date&&rec.date.year) cands.push({f:"year",v:String(rec.date.year)});
+  cands.sort((a,b)=>b.v.length-a.v.length);
+  const found=[];
+  for(const c of cands){ for(const i of findAll(text,c.v,c.v.length<=4)){ if(free(i,c.v.length)){ take(i,c.v.length,{kind:"field",f:c.f}); found.push(c.f); break; } } }
+  // reste : textes littéraux
+  for(let i=0;i<text.length;){ if(used[i]){ i++; continue; } let j=i; while(j<text.length&&!used[j]) j++; spans.push({i,n:j-i,kind:"lit"}); i=j; }
+  spans.sort((a,b)=>a.i-b.i);
+  const leftovers=spans.filter(s=>s.kind==="lit").map(s=>text.slice(s.i,s.i+s.n)).filter(t=>/\d{2,}|\p{L}{5,}/u.test(t));
+  if(leftovers.length) notes.push(T("gardé tel quel (aucun champ ne correspond) : ","kept as is (no matching field): ")+leftovers.map(t=>Q(t.trim())).join(", "));
+  // Mise en forme reconnue, élément par élément (l'italique vient des *…* de l'exemple).
+  const emOf=sp=>{ const e=em.slice(sp.i,sp.i+sp.n); return e.every(Boolean)?"all":e.some(Boolean)?"partial":"none"; };
+  const recog=spans.filter(sp=>sp.kind!=="lit").map(sp=>({what:sp.kind==="field"?sp.f:sp.kind, em:emOf(sp), prefix:sp.prefix||""}));
+  const litEm=spans.filter(sp=>sp.kind==="lit" && emOf(sp)!=="none").map(sp=>text.slice(sp.i,sp.i+sp.n).trim()).filter(t=>/[\p{L}\p{N}]/u.test(t));
+  if(unclosed) notes.push(T("un astérisque n'est pas refermé : l'italique court jusqu'à la fin de la référence","an asterisk is not closed: the italics run to the end of the reference"));
+  return {text, em, spans, style, found, notes, recog, litEm};
+}
+function buildRule(examples){ // examples : [{rec, raw}]
+  const R=V("notice"), list=V("liste"), p=V("p");
+  const an=examples.map(e=>Object.assign(analyseExample(e.rec,e.raw),{rec:e.rec}));
+  const st=an.map(a=>a.style).find(Boolean);
+  const defs=[];
+  const usesAuthors=an.some(a=>a.style);
+  if(usesAuthors){
+    const sep2=(an.map(a=>a.style&&(a.style.sepLast)).find(x=>x&&a2(x)))||(dialect==="fr"?" et ":" and ");
+    const etal=(an.map(a=>a.style&&a.style.etal).find(Boolean))||" et al.";
+    defs.push(N("Def",{kind:"fn",name:"nom_auteur",params:["p"],body:N("Concat",{parts:st.form.ast(p)}),comments:[(dialect==="fr"?"# Format des noms déduit des exemples : ":"# Name format inferred from the examples: ")+st.form.fmt(dialect==="fr"?{family:"Nom",given:"Prénom"}:{family:"Family",given:"Given"})]}));
+    const nm=x=>C("nom_auteur",x), first=M(list,"first"), last=M(list,"last"), len=M(list,"length");
+    defs.push(N("Def",{kind:"fn",name:"auteurs",params:["liste"],comments:[],
+      body:N("If",{c:N("Bin",{op:"==",l:len,r:N("Num",{v:0})}),a:S(""),
+        b:N("If",{c:N("Bin",{op:"==",l:len,r:N("Num",{v:1})}),a:nm(first),
+          b:N("If",{c:N("Bin",{op:"==",l:len,r:N("Num",{v:2})}),a:N("Concat",{parts:[nm(first),S(sep2),nm(last)]}),
+            b:N("Concat",{parts:[nm(first),S(etal.startsWith(" ")||etal.startsWith(",")?etal:" "+etal)]})})})})}));
+  }
+  const fieldNode={title:()=>C("link",F(R,"title")), year:()=>F(F(R,"date"),"year")};
+  const armParts=an.map(a=>{
+    const parts=[];
+    for(const s of a.spans){
+      let node;
+      if(s.kind==="authors") node=C("auteurs",F(R,"creators"));
+      else if(s.kind==="doi") node=s.prefix?C("if_set",F(R,"doi"),S(s.prefix)):F(R,"doi");
+      else if(s.kind==="field") node=(fieldNode[s.f]||(()=>F(R,s.f)))();
+      else node=S(a.text.slice(s.i,s.i+s.n));
+      const isEm=a.em.slice(s.i,s.i+s.n).every(Boolean) && s.n>0;
+      parts.push({node,em:isEm});
+    }
+    // fusion : littéraux adjacents, puis italiques adjacents
+    const merged=[];
+    for(const x of parts){ const l=merged[merged.length-1];
+      if(l && l.em===x.em && l.node.k==="Str" && x.node.k==="Str") l.node=S(l.node.v+x.node.v);
+      else if(l && l.em && x.em) l.group.push(x.node);
+      else merged.push(Object.assign(x,{group:[x.node]})); }
+    return merged.map(x=>x.em? C("em", x.group.length>1?N("Concat",{parts:x.group}):x.group[0]) : x.group.length>1?N("Concat",{parts:x.group}):x.node);
+  });
+  const key=n=>JSON.stringify(n);
+  let body;
+  const byType={}; an.forEach((a,i)=>{ if(!byType[a.rec.type]) byType[a.rec.type]=armParts[i]; });
+  const types=Object.keys(byType);
+  // Une notice sans DOI ne peut pas le montrer dans son exemple : on lui ajoute le si_présent(doi) des autres.
+  const doiTail=Object.values(byType).map(a=>a[a.length-1]).find(n=>n&&n.k==="Call"&&n.name==="if_set"&&n.args[0].k==="Field"&&n.args[0].name==="doi");
+  if(doiTail) for(const t of Object.keys(byType)){ const a=byType[t], rec=an.find(x=>x.rec.type===t).rec;
+    if(!rec.doi && JSON.stringify(a[a.length-1])!==JSON.stringify(doiTail)) a.push(doiTail); }
+  if(types.length===1) body=N("Concat",{parts:byType[types[0]]});
+  else {
+    const arrs=types.map(t=>byType[t]);
+    let pre=0; while(arrs.every(a=>a.length>pre+1 && key(a[pre])===key(arrs[0][pre]))) pre++;
+    let suf=0; while(arrs.every(a=>a.length>pre+suf+1 && key(a[a.length-1-suf])===key(arrs[0][arrs[0].length-1-suf]))) suf++;
+    const mid=a=>{ const m=a.slice(pre,a.length-suf); return m.length===1?m[0]:N("Concat",{parts:m}); };
+    const arms=types.map(t=>({pat:t,e:mid(byType[t])}));
+    arms.push({pat:null,e:N("Concat",{parts:[C("em",C("link",F(R,"title"))),S(".")]})});
+    const parts=[...arrs[0].slice(0,pre), N("Match",{subj:F(R,"type"),arms}), ...arrs[0].slice(arrs[0].length-suf)];
+    body=parts.length===1?parts[0]:N("Concat",{parts});
+  }
+  defs.push(N("Def",{kind:"citation",name:"depuis_exemples",params:["notice"],body,comments:[]}));
+  const head=[dialect==="fr"?`# Règle déduite de ${examples.length} exemple${examples.length>1?"s":""} (${types.map(t=>TYPE_LABEL[t]).join(", ")}).`:`# Rule inferred from ${examples.length} example${examples.length>1?"s":""} (${types.map(t=>TYPE_LABEL[t]).join(", ")}).`,
+              swapComments("# Les champs reconnus sont devenus des données ; le reste est du texte. Ajustez les détails.",dialect),""];
+  defs[0].comments=[...head,...defs[0].comments];
+  return {defs, analyses:an};
+}
+function a2(x){ return x && x.length<=8; }
+function richToExample(segs){ return segs.map(g=>g.t==="text"?g.v : g.t==="em"?"*"+richToExample(g.c)+"*" : richToExample(g.c)).join(""); }
+
+/* ---------- Prédiction de la suite (étage 1 bis : index du code + formes courantes, sans modèle) ---------- */
+// Le code est découpé en jetons sous forme neutre (mots-clés, champs et méthodes canoniques), si bien qu'une
+// habitude prise en français sert aussi en anglais. On cherche la suite la plus fréquente après les derniers
+// jetons tapés ; le code de l'utilisateur compte trois fois plus que la base de formes courantes.
+const FORMES_COURANTES = `
+citation c(notice) = auteurs(notice.creators) ++ " (" ++ notice.date.year ++ "). " ++ em(link(notice.title)) ++ ". "
+citation c(notice) = link(notice.title) ++ ". " ++ em(notice.publication) ++ ", " ++ em(notice.volume) ++ "(" ++ notice.number ++ "), " ++ notice.pages ++ "."
+citation c(notice) = em(link(notice.title)) ++ " [" ++ notice.thesis_type ++ ", " ++ notice.institution ++ "]."
+citation c(notice) = em(link(notice.title)) ++ " [Jeu de données]. " ++ notice.publisher ++ "."
+citation c(notice) = if_set(notice.doi, " https://doi.org/")
+citation c(notice) = if notice.volume.is_set() then ", " ++ em(notice.volume) else ""
+citation c(notice) = if notice.number.is_set() then "(" ++ notice.number ++ ")" else ""
+citation c(notice) = if notice.doi.is_set() then " https://doi.org/" ++ notice.doi else ""
+citation c(notice) = if notice.pages.is_set() then ", p. " ++ notice.pages else ""
+fn nom(p) = p.family ++ ", " ++ p.given.initials()
+fn nom(p) = p.given.initials() ++ " " ++ p.family
+fn a(liste) = if liste.length() == 0 then "" else nom(liste.first())
+fn a(liste) = if liste.length() == 2 then nom(liste.first()) ++ " et " ++ nom(liste.last()) else nom(liste.first()) ++ " et al."
+`;
+function predTokens(text, recParams){
+  const t=lex(text), out=[];
+  for(let i=0;i<t.length-1;i++){
+    const k=t[i], nx=t[i+1];
+    if(k.type==="op" && k.value==="." && nx.type==="id"){
+      const call=t[i+2]&&t[i+2].type==="op"&&t[i+2].value==="(";
+      out.push({type:call?"method":"field", v:canon(call?"m":"f",nx.value), line:nx.line, end:nx.end}); i++; continue;
+    }
+    if(k.type==="id"){
+      const call=nx.type==="op"&&nx.value==="(";
+      const b=canon("b",k.value);
+      if(call && (b in BUILTINS)) out.push({type:"builtin",v:b,line:k.line,end:k.end});
+      else if(!call && recParams.has(k.value)) out.push({type:"rec",v:"",line:k.line,end:k.end});
+      else out.push({type:call?"call":"id",v:k.value,line:k.line,end:k.end});
+      continue;
+    }
+    out.push({type:k.type, v:k.value, line:k.line, end:k.end});
+  }
+  return out;
+}
+const tkey=t=>t.type+":"+t.v;
+const recParamsOf=text=>new Set([...text.matchAll(/^citation\s+[\p{L}_][\p{L}\p{N}_]*\s*\(\s*([\p{L}_][\p{L}\p{N}_]*)/gmu)].map(m=>m[1]));
+let CORPUS=null, idxCache={text:null,toks:null};
+function predict(text,pos,indexText){
+  indexText=indexText||text;
+  const before=text.slice(0,pos);
+  if(!/[ (]$/.test(before)) return null;               // après une espace ou une parenthèse seulement
+  if(/\S/.test(text.slice(pos).split("\n")[0])) return null; // en fin de ligne seulement
+  let ctx, own;
+  try{
+    const rp=recParamsOf(indexText);
+    ctx=predTokens(before, rp);
+    if(idxCache.text!==indexText){ let tk=null; try{ tk=predTokens(indexText, rp); }catch(e){ if(!(e instanceof EpsError)) throw e; } idxCache={text:indexText,toks:tk}; }
+    own=idxCache.toks;
+    if(!CORPUS) CORPUS=predTokens(FORMES_COURANTES, new Set(["notice"]));
+  }catch(e){ if(e instanceof EpsError) return null; throw e; }
+  if(ctx.length<2) return null;
+  const sources=[{toks:CORPUS,w:1,skipEnd:-1}];
+  if(own) sources.push({toks:own,w:3,skipEnd:indexText===text?ctx.length-1:-1});
+  for(let k=Math.min(6,ctx.length);k>=2;k--){
+    const want=ctx.slice(-k).map(tkey).join(" ");
+    const votes=new Map();
+    for(const src of sources){ const T=src.toks;
+      for(let i=0;i+k<T.length;i++){
+        if(i+k-1===src.skipEnd && src.toks===own) continue;
+        let ok=true; for(let j=0;j<k;j++) if(tkey(T[i+j])!==tkey(ctx[ctx.length-k+j])){ ok=false; break; }
+        if(!ok) continue;
+        const cont=[]; const line=T[i+k].line;
+        let depth=0, budget=0; { const ln=ctx[ctx.length-1].line; for(const c of ctx) if(c.line===ln && c.type==="op"){ if(c.v==="(") budget++; else if(c.v===")") budget=Math.max(0,budget-1); } }
+        for(let j=i+k;j<T.length && T[j].line===line && cont.length<12;j++){
+          if(T[j].type==="op" && (T[j].v==="("||T[j].v==="{")) depth++;
+          if(T[j].type==="op" && (T[j].v===")"||T[j].v==="}")){ if(depth===0){ if(T[j].v===")" && budget>0){ budget--; cont.push(T[j]); continue; } break; } depth--; }
+          cont.push(T[j]); if(T[j].type==="op"&&T[j].v==="++"&&cont.length>=4&&depth===0) break; }
+        while(cont.length && ((cont[cont.length-1].type==="op" && cont[cont.length-1].v==="++") || cont[cont.length-1].type==="kw")) cont.pop();
+        if(!cont.length) continue;
+        const key=cont.map(tkey).join(" "); const v=votes.get(key)||{toks:cont,w:0}; v.w+=src.w; votes.set(key,v);
+      }
+    }
+    if(votes.size){ return [...votes.values()].sort((a,b)=>b.w-a.w||b.toks.length-a.toks.length)[0].toks; }
+  }
+  return null;
+}
+function renderPred(toks, L, recName){
+  let out="", prev=null;
+  for(const t of toks){
+    let s;
+    switch(t.type){
+      case "kw": s=kwd(t.v,L); break;
+      case "field": s="."+loc("f",t.v,L); break;
+      case "method": s="."+loc("m",t.v,L); break;
+      case "builtin": s=loc("b",t.v,L); break;
+      case "rec": s=recName; break;
+      case "str": s=JSON.stringify(t.v); break;
+      default: s=String(t.v);
+    }
+    const tight = t.type==="field"||t.type==="method"||(t.type==="op"&&[")",","].includes(t.v))
+      ||(t.type==="op"&&t.v==="("&&prev&&["builtin","call","method"].includes(prev.type))
+      ||(prev&&prev.type==="op"&&prev.v==="(");
+    if(prev && !tight) out+=" ";
+    out+=s; prev=t;
+  }
+  return out;
+}
+
+/* ---------- Interface ---------- */
+const $=id=>document.getElementById(id);
+const src=$("src"), gutter=$("gutter");
+let selected=0, layer="form", lastGood=null;
+const ACCEPT={};
+function setAccept(){ Object.assign(ACCEPT, UIL==="en"?{data:"Accept: application/ld+json — what a robot receives",frame:"text/html without style — screen reader, minimal device",form:"text/html — full browser"}:{data:"Accept: application/ld+json — ce que reçoit un robot",frame:"text/html sans style — lecteur d'écran, appareil minimal",form:"text/html — navigateur complet"}); }
+setAccept();
+
+/* Documents : la règle et la bibliothèque de fonctions sont deux documents ; le programme compilé est leur réunion. */
+const docs={lib:"",rule:""}; let activeDoc="rule";
+const docState={lib:{sel:0,scroll:0},rule:{sel:0,scroll:0}};
+const DOC_NAME={get lib(){return T("Fonctions","Functions")}, get rule(){return T("Règle","Rule")}};
+function syncDoc(){ docs[activeDoc]=src.value; }
+function fullText(){ syncDoc(); return docs.lib+"\n"+docs.rule; }
+function docOffset(d){ return d==="lib"?0:docs.lib.length+1; }
+function docLines(d){ return d==="lib"?0:docs.lib.split("\n").length; }
+function locate(full){ const o=docs.lib.length+1; return full<o?{doc:"lib",pos:full}:{doc:"rule",pos:full-o}; }
+function localErr(e){ const L=locate(e.start); return {message:e.message, col:e.col, line:e.line-docLines(L.doc), start:L.pos, doc:L.doc, full:e.start}; }
+function markDoc(){ document.querySelectorAll("[data-doc]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.doc===activeDoc)));
+  $("docinfo").textContent= activeDoc==="lib" ? T("partagées par toutes les règles","shared by all rules") : T("la citation, qui appelle les fonctions","the citation, which calls the functions"); }
+function setDoc(d){
+  syncDoc(); docState[activeDoc]={sel:src.selectionStart, scroll:src.scrollTop};
+  activeDoc=d; src.value=docs[d]; const st=docState[d]; const p=Math.min(st.sel,src.value.length);
+  src.setSelectionRange(p,p); src.scrollTop=st.scroll; markDoc(); if(typeof closeAC==="function") closeAC(); compile();
+}
+function refreshDoc(){ src.value=docs[activeDoc]; compile(); }
+function splitPreset(text){
+  const lines=text.split("\n"); let h=0; while(h<lines.length && lines[h].startsWith("#")) h++;
+  const header=lines.slice(0,h).join("\n"), rest=lines.slice(h).join("\n"), ci=rest.search(/^citation\b/m);
+  return {lib:swapComments("# Fonctions partagées par les règles de citation.",dialect)+"\n"+rest.slice(0,ci).replace(/\s+$/,"")+"\n", rule:header+"\n\n"+rest.slice(ci)};
+}
+function splitDefs(defs,L){
+  return {lib:printProgram(defs.filter(d=>d.kind!=="citation"),L), rule:printProgram(defs.filter(d=>d.kind==="citation"),L)};
+}
+
+/* Colonne latérale : les noms disponibles, toujours visibles */
+let sideCollapsed=false;
+try{ sideCollapsed=localStorage.getItem("atelier-epscript2-side")==="1"; }catch(_){}
+function applySide(){ $("side").classList.toggle("collapsed",sideCollapsed); const b=$("side-toggle");
+  b.textContent=sideCollapsed?"»":"«"; b.setAttribute("aria-expanded",String(!sideCollapsed)); b.title=sideCollapsed?T("Déplier la colonne","Expand the column"):T("Replier la colonne","Collapse the column"); }
+function renderSide(defs){
+  const L=dialect, fr=UIL==="fr";
+  const item=(label,ins,back,desc,def)=>`<div class="fitem"><button type="button" class="fins" data-ins="${esc(ins)}" data-back="${back}" title="${fr?"Insérer au curseur":"Insert at cursor"}">${esc(label)}${desc?`<small>${esc(desc)}</small>`:""}</button>${def!=null?`<button type="button" class="fdef" data-def="${def}" title="${fr?"Voir la définition":"Go to definition"}">↗</button>`:""}</div>`;
+  const fns=(defs||[]).filter(d=>d.kind==="fn"), cits=(defs||[]).filter(d=>d.kind==="citation");
+  const sec=(title,body,open=true)=>`<details${open?" open":""}><summary>${title}</summary>${body}</details>`;
+  let h="";
+  h+=sec((fr?"Vos fonctions":"Your functions")+` (${fns.length})`, fns.map(d=>item(`${d.name}(${d.params.join(", ")})`, d.name+"()", d.params.length?1:0, (d.comments.length && d.comments[d.comments.length-1].startsWith("#") ? d.comments[d.comments.length-1].replace(/^#\s?/,"") : (fr?"sans description : ajoutez un commentaire juste au-dessus":"no description: add a comment just above")), d.start)).join("")||`<small>${fr?"aucune":"none"}</small>`);
+  h+=sec(fr?"Règles de citation":"Citation rules", cits.map(d=>item(`${kwd("citation",L)} ${d.name}(${d.params.join(", ")})`, d.name, 0, "", d.start)).join(""));
+  h+=sec(fr?"Intégrées":"Built-in", Object.keys(BUILTINS).map(b=>item(loc("b",b,L)+(b==="if_set"?(fr?"(valeur, avant, après)":"(value, before, after)"):"(…)"), loc("b",b,L)+"()", 1, DOCS[UIL][b])).join(""));
+  h+=sec(fr?"Méthodes":"Methods", Object.keys(METHODS).map(m=>item("."+loc("m",m,L)+"()", "."+loc("m",m,L)+"()", METHODS[m]===0?0:1, DOCS[UIL][m])).join(""), false);
+  h+=sec(fr?"Champs":"Fields", Object.entries(SCHEMA).map(([t,fs])=>`<div class="fitem"><small style="color:var(--muted);padding:2px 6px">${esc(typeName(t))}</small></div>`+Object.entries(fs).map(([f,ft])=>item("."+loc("f",f,L), "."+loc("f",f,L), 0, typeName(ft))).join("")).join(""), false);
+  const body=$("side-body"); const openState=[...body.querySelectorAll("details")].map(d=>d.open);
+  body.innerHTML=h; if(openState.length) body.querySelectorAll("details").forEach((d,i)=>{ if(i<openState.length) d.open=openState[i]; });
+}
+function updateGutter(badLines){
+  const n=src.value.split("\n").length; let out="";
+  for(let i=1;i<=n;i++) out+=`<span data-l="${i}"${badLines.has(i)?' class="bad"':""}>${i}</span>\n`;
+  gutter.innerHTML=out; gutter.scrollTop=src.scrollTop; renderHL();
+}
+let lastParse={text:null,defs:null}, lastErrs=[], ghost=null;
+function parsedNow(){
+  const ft=fullText();
+  if(lastParse.text!==ft){ let d=null; try{ d=parse(ft); }catch(e){ if(!(e instanceof EpsError)) throw e; } lastParse={text:ft,defs:d}; }
+  return lastParse.defs;
+}
+// Portée active : le « si » ou « selon » le plus intérieur qui contient le curseur (une chaîne de « sinon si »
+// compte pour un seul bloc), sinon la définition. Repli sans analyse : la définition en cours.
+function activeRange(pos){
+  const defs=parsedNow(), off=docOffset(activeDoc); pos+=off;
+  if(defs){
+    const chained=new Set(); let best=null;
+    for(const d of defs) eachNode(d,n=>{ if(n.k==="If" && n.b.k==="If") chained.add(n.b); });
+    for(const d of defs) eachNode(d,n=>{
+      if((n.k==="If"&&!chained.has(n))||n.k==="Match"||n.k==="Def") if(n.start<=pos && pos<=n.end && (!best || n.end-n.start<best.end-best.start)) best=n; });
+    return best?{start:best.start-off,end:best.end-off}:null;
+  }
+  const heads=[...src.value.matchAll(/^(fonction|fn|citation)\b/gmu)].map(m=>m.index);
+  let st=null, en=src.value.length; for(const h of heads){ if(h<=pos) st=h; else { en=h; break; } }
+  return st===null?null:{start:st,end:en};
+}
+const hl=$("hl");
+function renderHL(){
+  const focused=document.activeElement===src;
+  const act=focused?activeRange(src.selectionStart):null;
+  const errSet=new Set(lastErrs.map(e=>e.start));
+  ghost=null;
+  if(focused && !ac.open && src.selectionStart===src.selectionEnd){
+    const pos=src.selectionStart, toks=predict(src.value,pos,fullText());
+    if(toks){ const heads=[...(activeDoc==="rule"?src.value.slice(0,pos):"").matchAll(/^citation\s+[\p{L}_][\p{L}\p{N}_]*\s*\(\s*([\p{L}_][\p{L}\p{N}_]*)/gmu)];
+      ghost={pos, text:renderPred(toks, dialect, heads.length?heads[heads.length-1][1]:"notice")}; }
+  }
+  if(ghost) hl.innerHTML=hlHTML(src.value.slice(0,ghost.pos), act, errSet, 0, false)+`<span class="ghost">${esc(ghost.text)}</span><span class="ghost-hint">Tab</span>`+hlHTML(src.value.slice(ghost.pos), act, errSet, ghost.pos, false)+"\n ";
+  else hl.innerHTML=hlHTML(src.value, act, errSet);
+  hl.scrollTop=src.scrollTop; hl.scrollLeft=src.scrollLeft;
+  // Erreurs en ligne : flèche sous la colonne fautive, message juste sous la ligne.
+  let layer=hl.parentElement.querySelector(".errlayer");
+  if(!layer){ layer=document.createElement("div"); layer.className="errlayer"; layer.setAttribute("aria-hidden","true"); hl.parentElement.appendChild(layer); }
+  try{
+    const area=hl.parentElement, W=area.clientWidth;
+    layer.innerHTML=lastErrs.slice(0,3).map(e=>{
+      const {x,y}=caretXY(e.start);
+      if(y<0 || y>area.clientHeight-10) return "";
+      const msgW=Math.min(380, W-16), shift=Math.min(0, W-8-(x-6)-msgW);
+      return `<div class="errmark" style="left:${x}px;top:${y-3}px"><span class="arrow">▲</span><span class="msg" style="max-width:${msgW}px;margin-left:${shift-6}px">${T("ligne","line")} ${e.line}, col. ${e.col} — ${esc(e.message)}</span></div>`;
+    }).join("");
+  }catch(_){ layer.innerHTML=""; }
+  const l0=act?src.value.slice(0,act.start).split("\n").length:0, l1=act?src.value.slice(0,act.end).split("\n").length:-1;
+  gutter.querySelectorAll("span[data-l]").forEach(e=>{ const l=+e.dataset.l; e.classList.toggle("act", l>=l0 && l<=l1); });
+  const root=$("blocks"); root.querySelectorAll(".bx.active").forEach(e=>e.classList.remove("active"));
+  let best=null; const offB=docOffset(activeDoc);
+  if(act) root.querySelectorAll(".bx").forEach(e=>{ const s0=+e.dataset.start, e0=+e.dataset.end; if(s0<=act.start+offB && e0>=act.end+offB && (!best || e0-s0<best.len)) best={e,len:e0-s0}; });
+  root.classList.toggle("focus", !!best);
+  if(best){ best.e.classList.add("active");
+    let top=0; for(let x=best.e; x && x!==root; x=x.offsetParent) top+=x.offsetTop;
+    if(top<root.scrollTop || top>root.scrollTop+root.clientHeight-40) root.scrollTop=Math.max(0,top-20); }
+}
+let hlQueued=false;
+const queueHL=()=>{ if(hlQueued) return; hlQueued=true; requestAnimationFrame(()=>{ hlQueued=false; renderHL(); }); };
+["keyup","mouseup","focus","blur","input"].forEach(ev=>src.addEventListener(ev,queueHL));
+document.addEventListener("selectionchange",()=>{ if(document.activeElement===src) queueHL(); });
+let view="code";
+try{ if(localStorage.getItem("atelier-epscript2-view")==="boxes") view="boxes"; }catch(_){}
+function setView(v){
+  const ed=$("view-code"), bx=$("view-boxes"), bl=$("blocks");
+  if(v==="boxes" && ed.offsetHeight) bl.style.height=ed.offsetHeight+"px";
+  if(v==="code" && bl.offsetHeight) ed.style.height=bl.offsetHeight+"px";
+  view=v; ed.hidden=v!=="code"; bx.hidden=v!=="boxes"; $("hint-code").hidden=v!=="code";
+  document.querySelectorAll("[data-view]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.view===v)));
+  try{ localStorage.setItem("atelier-epscript2-view",v); }catch(_){}
+  if(v==="code") queueHL();
+}
+function goTo(full){ if(view!=="code") setView("code"); const Lc=locate(full); if(Lc.doc!==activeDoc) setDoc(Lc.doc); const start=Lc.pos; src.focus(); src.setSelectionRange(start,start);
+  const line=src.value.slice(0,start).split("\n").length; src.scrollTop=Math.max(0,(line-4)*parseFloat(getComputedStyle(src).lineHeight)); }
+
+function compile(){
+  const t0=performance.now(); let defs=null, errs=[];
+  try{ defs=parse(fullText()); const c=check(defs); errs=c.errs; if(!errs.length) lastGood={defs, fns:c.fns, cit:defs.find(d=>d.kind==="citation").name}; }
+  catch(e){ if(e instanceof EpsError) errs=[e]; else throw e; }
+  const ms=(performance.now()-t0).toFixed(1);
+  const errsL=errs.map(localErr); lastErrs=errsL.filter(e=>e.doc===activeDoc); updateGutter(new Set(lastErrs.map(e=>e.line)));
+  const st=$("status");
+  if(errs.length){
+    st.innerHTML=`<span>${errs.length} ${T("problème","problem")}${errs.length>1?"s":""} — ${T("le dernier état valide reste affiché :","the last valid state stays on screen:")}</span>`+
+      errsL.map(e=>`<button type="button" class="errline" data-start="${e.full}">${DOC_NAME[e.doc]}, ${T("ligne","line")} ${e.line}, col. ${e.col} — ${esc(e.message)}</button>`).join("");
+  } else {
+    st.innerHTML=`<span class="ok">${T("Compilé et vérifié en","Compiled and checked in")} ${ms} ms</span><span class="accept">${defs.length} ${T("définitions · types vérifiés contre le schéma « notice »","definitions · types checked against the “record” schema")}</span><span class="structure">${T("Forme conservée : structure neutre · empreinte","Stored form: neutral structure · fingerprint")} ${structureHash(defs)} · ${T("identique dans toutes les langues","identical in every language")}</span>`+
+      coverageWarnings(defs).map(w=>{ const Lw=locate(w.start); return `<button type="button" class="warnline" data-start="${w.start}">${DOC_NAME[Lw.doc]}, ${T("ligne","line")} ${w.line-docLines(Lw.doc)} — ${esc(w.message)}</button>`; }).join("");
+  }
+  if(defs && !errs.some(e=>e.message.startsWith("Attendu")||e.message.startsWith("Expression")||e.message.startsWith("Chaîne")||e.message.startsWith("Caractère"))) { $("blocks").innerHTML=printHTML(defs,dialect); renderHL(); }
+  if(defs) renderSide(defs); else if(lastGood) renderSide(lastGood.defs);
+  renderOutputs();
+}
+function citeFor(r){
+  if(!lastGood) return {html:"", err:T("Aucun état valide","No valid state")};
+  try{ const v=run(lastGood.fns, lastGood.cit, r); const segs=toRich(v); return {html:richHTML(magic?magicPunct(segs):segs, BASE+r.id)}; }
+  catch(e){ if(e instanceof EpsError) return {html:"", err:`${T("ligne","line")} ${e.line} — ${e.message}`}; throw e; }
+}
+function renderOutputs(){
+  const results=RECORDS.map(citeFor);
+  $("tests").innerHTML=RECORDS.map((r,i)=>`<button type="button" class="test" data-i="${i}" aria-pressed="${i===selected}">
+    <span class="tt">${TYPE_LABEL[r.type]} · ${T("notice","record")} ${r.id}</span>
+    ${results[i].err?`<span class="rterr">${esc(results[i].err)}</span>`:`<span class="cite">${results[i].html||`<em>(${T("vide","empty")})</em>`}</span>`}</button>`).join("");
+  const r=RECORDS[selected], cite=results[selected].html;
+  $("out-sel").textContent=`${TYPE_LABEL[r.type]} · ${T("notice","record")} ${r.id}`; $("out-sel").title=T("Choisissez une notice dans le rendu en direct","Pick a record in the live output");
+  document.querySelectorAll("[data-layer]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.layer===layer)));
+  $("accept").textContent=ACCEPT[layer];
+  const L=$("layer");
+  if(layer==="data") L.innerHTML=`<pre class="code">${esc(jsonld(r))}</pre>`;
+  else if(layer==="frame"){ const h=frameHTML(r,cite); L.innerHTML=`<pre class="code">${esc(h)}</pre><div class="bare">${h}</div>`; }
+  else L.innerHTML=formHTML(r,cite);
+}
+
+function setDialect(L){
+  if(L===dialect) return;
+  let defs=null;
+  try{ defs=parse(fullText()); if(check(defs).errs.length) defs=null; }catch(e){ if(!(e instanceof EpsError)) throw e; }
+  if(!defs){ $("status").insertAdjacentHTML("afterbegin",`<span class="rterr">${T("Corrigez d'abord les problèmes pour changer de langue.","Fix the problems first to switch language.")}</span>`); return; }
+  dialect=L; Object.assign(docs, splitDefs(defs,L)); docs.lib=swapComments(docs.lib,L); docs.rule=swapComments(docs.rule,L); markDialect(); refreshDoc();
+}
+function markDialect(){ document.querySelectorAll("[data-dialect]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.dialect===dialect))); }
+/* Prédiction : fenêtre de suggestions */
+const ac={open:false,items:[],sel:0,start:0,end:0,suppress:false};
+const pop=document.createElement("div"); pop.className="ac"; pop.id="ac"; pop.setAttribute("role","listbox"); pop.hidden=true;
+document.querySelector(".area").appendChild(pop);
+const mirror=document.createElement("div"); document.body.appendChild(mirror);
+function caretXY(pos){
+  const cs=getComputedStyle(src);
+  for(const k of ["fontFamily","fontSize","lineHeight","paddingTop","paddingLeft","paddingRight","whiteSpace","tabSize","letterSpacing","boxSizing"]) mirror.style[k]=cs[k];
+  Object.assign(mirror.style,{position:"absolute",visibility:"hidden",top:"0",left:"-9999px",width:src.clientWidth+"px",overflow:"hidden"});
+  mirror.textContent=src.value.slice(0,pos); const mk=document.createElement("span"); mk.textContent="\u200b"; mirror.appendChild(mk);
+  return {x:src.offsetLeft+mk.offsetLeft-src.scrollLeft, y:src.offsetTop+mk.offsetTop-src.scrollTop+parseFloat(cs.lineHeight)};
+}
+function closeAC(){ ac.open=false; pop.hidden=true; src.removeAttribute("aria-activedescendant"); }
+function drawAC(){
+  pop.innerHTML=ac.items.map((it,i)=>`<div class="ac-item" role="option" id="ac-${i}" data-i="${i}" aria-selected="${i===ac.sel}"><span class="ac-k">${esc(it.kind)}</span><span class="ac-l">${esc(it.label)}</span>${it.detail?`<span class="ac-d">${esc(it.detail)}</span>`:""}</div>`).join("");
+  src.setAttribute("aria-activedescendant","ac-"+ac.sel);
+  const el=pop.children[ac.sel]; if(el){ if(el.offsetTop<pop.scrollTop) pop.scrollTop=el.offsetTop; else if(el.offsetTop+el.offsetHeight>pop.scrollTop+pop.clientHeight) pop.scrollTop=el.offsetTop+el.offsetHeight-pop.clientHeight; }
+}
+function updateAC(forced){
+  let defs=lastGood&&lastGood.defs; try{ const d=parse(fullText()); defs=d; }catch(e){ if(!(e instanceof EpsError)) throw e; }
+  const r=complete(src.value, src.selectionStart, defs, forced);
+  if(!r || src.selectionStart!==src.selectionEnd){ closeAC(); return; }
+  Object.assign(ac,{open:true,items:r.items,sel:0,start:r.start,end:r.end});
+  pop.hidden=false; drawAC();
+  const {x,y}=caretXY(r.start), ed=pop.parentElement;
+  pop.style.left=Math.max(4,Math.min(x, ed.clientWidth-pop.offsetWidth-4))+"px";
+  pop.style.top=(y+pop.offsetHeight>ed.clientHeight? Math.max(4,y-pop.offsetHeight-parseFloat(getComputedStyle(src).lineHeight)) : y)+"px";
+}
+function acceptAC(i){
+  const it=ac.items[i]; if(!it) return;
+  src.focus(); src.setRangeText(it.insert, ac.start, ac.end, "end");
+  if(it.back){ const p=src.selectionStart-it.back; src.setSelectionRange(p,p); }
+  closeAC(); ac.suppress=true; src.dispatchEvent(new Event("input"));
+}
+function acKey(e){
+  if(e.key===" " && e.ctrlKey){ e.preventDefault(); updateAC(true); return true; }
+  if(!ac.open) return false;
+  if(e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); ac.sel=(ac.sel+(e.key==="ArrowDown"?1:-1)+ac.items.length)%ac.items.length; drawAC(); return true; }
+  if(e.key==="Enter"||e.key==="Tab"){ e.preventDefault(); acceptAC(ac.sel); return true; }
+  if(e.key==="Escape"){ e.preventDefault(); closeAC(); return true; }
+  if(["ArrowLeft","ArrowRight","Home","End","PageUp","PageDown"].includes(e.key)) closeAC();
+  return false;
+}
+pop.addEventListener("mousedown",e=>{ const it=e.target.closest(".ac-item"); if(it){ e.preventDefault(); acceptAC(Number(it.dataset.i)); } });
+src.addEventListener("input",()=>{ if(ac.suppress){ ac.suppress=false; return; } updateAC(false); });
+src.addEventListener("blur",()=>setTimeout(closeAC,120));
+src.addEventListener("mousedown",closeAC);
+src.addEventListener("scroll",()=>{ if(ac.open) closeAC(); });
+
+/* Règle à partir d'exemples */
+function drawExamples(){
+  const keep=RECORDS.map((_,i)=>{ const t=document.getElementById("ex-"+i); return t?t.value:""; });
+  $("exgrid").innerHTML=RECORDS.map((r,i)=>`<div class="ex"><label for="ex-${i}">${TYPE_LABEL[r.type]} · ${T("notice","record")} ${r.id} · ${esc(r.creators.map(p=>p.family).join(", "))}</label><textarea id="ex-${i}" spellcheck="false" placeholder="${T("Écrivez ici la référence voulue pour cette notice…","Write the reference you want for this record here…")}"></textarea></div>`).join("");
+  keep.forEach((v,i)=>{ if(v) $("ex-"+i).value=v; });
+}
+$("ex-fill").addEventListener("click",()=>{
+  RECORDS.forEach((r,i)=>{ const c=citeFor(r); if(c.err) return; let segs; try{ segs=toRich(run(lastGood.fns,lastGood.cit,r)); }catch(e){ return; } $("ex-"+i).value=richToExample(magic?magicPunct(segs):segs); });
+});
+$("ex-clear").addEventListener("click",()=>{ RECORDS.forEach((r,i)=>$("ex-"+i).value=""); });
+$("ex-go").addEventListener("click",()=>{
+  const ex=RECORDS.map((r,i)=>({rec:r,raw:$("ex-"+i).value.trim()})).filter(x=>x.raw);
+  if(!ex.length){ $("exnotes").innerHTML=`<li>${T("Écrivez au moins une référence.","Write at least one reference.")}</li>`; return; }
+  const {defs,analyses}=buildRule(ex);
+  Object.assign(docs, splitDefs(defs,dialect)); activeDoc==="rule" ? refreshDoc() : setDoc("rule"); src.scrollTop=0;
+  const FN=dialect==="fr"?{title:"titre",year:"année"}:{};
+  const fr=dialect==="fr", ui=UIL==="fr";
+  const nameOf=w=> w==="authors"?(fr?"auteurs":"creators") : w==="doi"?"doi" : (FN[w]||loc("f",w));
+  const fmt=r=>{ const d=[];
+    if(r.em==="all") d.push(ui?"italique":"italic");
+    if(r.em==="partial") d.push(ui?"italique sur une partie seulement : non repris, à vérifier":"partly italic: not kept, check");
+    if(r.what==="title") d.push(ui?"lien vers la notice":"link to record");
+    if(r.what==="doi" && r.prefix) d.push((ui?"préfixe ":"prefix ")+Q(r.prefix.trim())+", "+(ui?"seulement s'il existe":"only if present"));
+    return `<b>${esc(nameOf(r.what))}</b>${d.length?" ("+esc(d.join(", "))+")":""}`; };
+  $("exnotes").innerHTML=analyses.map(a=>`<li><b>${T("Notice","Record")} ${a.rec.id}</b> — ${T("reconnu :","recognised:")} ${a.recog.map(fmt).join(", ")||T("aucun champ","no field")}`+
+    `${a.litEm.length?`. ${T("Texte fixe en italique :","Fixed text in italics:")} ${a.litEm.map(t=>Q(esc(t))).join(", ")}`:""}`+
+    `${a.notes.length?". "+a.notes.map(esc).join(". "):""}.</li>`).join("")+
+    (new Set(ex.map(x=>x.rec.type)).size===1?`<li>${T(`Un seul type d'exemple : la règle s'applique à tous les types. Ajoutez un exemple par type pour obtenir un ${Q(kwd("match"))}.`,`Only one type of example: the rule applies to all types. Add one example per type to get a ${Q(kwd("match"))}.`)}</li>`:"")+
+    `<li>${T("La règle est dans la source : ajustez-la, puis vérifiez le rendu sur les quatre notices.","The rule is now in the source: adjust it, then check the output on the four records.")}</li>`;
+});
+drawExamples();
+/* Disposition */
+const LAYOUT_DEFAULT={order:["src","out","ex"], wide:{ex:true}, size:{src:1.5,out:1,ex:1}};
+const PANEL_NAME={get src(){return T("Éditeur","Editor")}, get out(){return T("Couches servies","Served layers")}, get ex(){return T("Règle à partir d'exemples","Rule from examples")}};
+let LAY=JSON.parse(JSON.stringify(LAYOUT_DEFAULT));
+try{ const v=JSON.parse(localStorage.getItem("atelier-epscript2-layout-v2")||"null"); if(v && Array.isArray(v.order) && v.order.slice().sort().join()===LAYOUT_DEFAULT.order.slice().sort().join()) LAY=v; }catch(_){}
+const saveLayout=()=>{ try{ localStorage.setItem("atelier-epscript2-layout-v2",JSON.stringify(LAY)); }catch(_){} };
+const panelEl=id=>document.querySelector(`[data-panel="${id}"]`);
+for(const id of LAYOUT_DEFAULT.order){
+  const h=panelEl(id).querySelector("h2"); const first=h.firstChild;
+  const t=document.createElement("span"); t.className="htitle";
+  t.innerHTML=`<span class="grip" draggable="true" data-grip="${id}" title="${T("Glisser pour déplacer le panneau","Drag to move the panel")}" aria-hidden="true">⠿</span>`;
+  t.appendChild(first); h.insertBefore(t,h.firstChild);
+  const m=document.createElement("span"); m.className="pmove";
+  m.innerHTML=`<button type="button" data-move="-1" data-id="${id}" title="${T("Déplacer avant","Move before")}" aria-label="${T("Déplacer","Move")} ${Q(PANEL_NAME[id])} ${T("avant","before")}">◀</button><button type="button" data-move="1" data-id="${id}" title="${T("Déplacer après","Move after")}" aria-label="${T("Déplacer","Move")} ${Q(PANEL_NAME[id])} ${T("après","after")}">▶</button><button type="button" data-wide="${id}" title="${T("Pleine largeur","Full width")}" aria-label="${T(`${Q(PANEL_NAME[id])} en pleine largeur`,`${Q(PANEL_NAME[id])} full width`)}">⤢</button>`;
+  h.appendChild(m);
+}
+function renderLayout(){
+  const root=$("layout"); const panels=LAY.order.map(panelEl);
+  root.innerHTML="";
+  let row=null;
+  LAY.order.forEach((id,i)=>{
+    const el=panels[i], wide=!!LAY.wide[id];
+    el.classList.toggle("wide",wide);
+    el.querySelector(`[data-wide="${id}"]`).setAttribute("aria-pressed",String(wide));
+    if(wide || !row){ row=document.createElement("div"); row.className="lrow"; root.appendChild(row); }
+    else { const sp=document.createElement("div"); sp.className="split"; sp.setAttribute("role","separator"); sp.setAttribute("aria-orientation","vertical"); sp.title=T("Glisser pour élargir","Drag to resize"); row.appendChild(sp); }
+    el.style.flex=`${LAY.size[id]||1} 1 0px`;
+    row.appendChild(el);
+    if(wide) row=null;
+  });
+  queueHL();
+}
+document.addEventListener("click",e=>{
+  const mv=e.target.closest("[data-move]");
+  if(mv){ const id=mv.dataset.id, i=LAY.order.indexOf(id), j=i+Number(mv.dataset.move);
+    if(j>=0 && j<LAY.order.length){ LAY.order.splice(i,1); LAY.order.splice(j,0,id); saveLayout(); renderLayout(); mv.focus(); } return; }
+  const wd=e.target.closest("[data-wide]");
+  if(wd){ const id=wd.dataset.wide; LAY.wide[id]=!LAY.wide[id]; saveLayout(); renderLayout(); wd.focus(); }
+});
+$("btn-layout").addEventListener("click",()=>{ LAY=JSON.parse(JSON.stringify(LAYOUT_DEFAULT)); saveLayout(); renderLayout(); });
+// Poignées entre colonnes
+$("layout").addEventListener("pointerdown",e=>{
+  const sp=e.target.closest(".split"); if(!sp) return;
+  e.preventDefault(); sp.setPointerCapture(e.pointerId); sp.classList.add("drag");
+  const A=sp.previousElementSibling, B=sp.nextElementSibling, row=sp.parentElement;
+  const ps=[...row.querySelectorAll(":scope>.panel")]; ps.forEach(p=>{ p.style.flex=`${p.getBoundingClientRect().width} 1 0px`; });
+  const wa=A.getBoundingClientRect().width, wb=B.getBoundingClientRect().width, x0=e.clientX, MIN=240;
+  const move=ev=>{ const dx=Math.max(MIN-wa, Math.min(wb-MIN, ev.clientX-x0)); A.style.flex=`${wa+dx} 1 0px`; B.style.flex=`${wb-dx} 1 0px`; queueHL(); };
+  const up=()=>{ sp.classList.remove("drag"); sp.removeEventListener("pointermove",move); sp.removeEventListener("pointerup",up); sp.removeEventListener("pointercancel",up);
+    const tot=ps.reduce((t,p)=>t+p.getBoundingClientRect().width,0);
+    ps.forEach(p=>{ LAY.size[p.dataset.panel]=+(p.getBoundingClientRect().width/tot*ps.length).toFixed(3); }); saveLayout(); renderLayout(); };
+  sp.addEventListener("pointermove",move); sp.addEventListener("pointerup",up); sp.addEventListener("pointercancel",up);
+});
+// Glisser-déposer des panneaux
+let dragId=null;
+document.addEventListener("dragstart",e=>{ const g=e.target.closest&&e.target.closest("[data-grip]"); if(!g) return; dragId=g.dataset.grip;
+  e.dataTransfer.effectAllowed="move"; try{ e.dataTransfer.setData("text/plain",dragId); e.dataTransfer.setDragImage(panelEl(dragId),20,20); }catch(_){} });
+const clearDrop=()=>document.querySelectorAll(".dropbefore,.dropafter").forEach(x=>x.classList.remove("dropbefore","dropafter"));
+const dropSide=(el,e)=>{ const r=el.getBoundingClientRect(); return el.classList.contains("wide") ? (e.clientY<r.top+r.height/2?"before":"after") : (e.clientX<r.left+r.width/2?"before":"after"); };
+document.addEventListener("dragover",e=>{ if(!dragId) return; const p=e.target.closest&&e.target.closest("[data-panel]"); if(!p||p.dataset.panel===dragId) return;
+  e.preventDefault(); clearDrop(); p.classList.add("drop"+dropSide(p,e)); });
+document.addEventListener("drop",e=>{ if(!dragId) return; const p=e.target.closest&&e.target.closest("[data-panel]"); clearDrop();
+  if(p && p.dataset.panel!==dragId){ e.preventDefault(); const side=dropSide(p,e);
+    LAY.order.splice(LAY.order.indexOf(dragId),1); let j=LAY.order.indexOf(p.dataset.panel)+(side==="after"?1:0); LAY.order.splice(j,0,dragId); saveLayout(); renderLayout(); }
+  dragId=null; });
+document.addEventListener("dragend",()=>{ dragId=null; clearDrop(); });
+if(window.ResizeObserver) new ResizeObserver(()=>queueHL()).observe(document.querySelector(".area"));
+renderLayout();
+let timer=null;
+src.addEventListener("input",()=>{ clearTimeout(timer); timer=setTimeout(compile,120); updateGutter(new Set()); });
+src.addEventListener("scroll",()=>{ gutter.scrollTop=src.scrollTop; hl.scrollTop=src.scrollTop; hl.scrollLeft=src.scrollLeft; queueHL(); });
+src.addEventListener("keydown",e=>{ if(acKey(e)) return;
+  if(ghost && src.selectionStart===ghost.pos && src.selectionEnd===ghost.pos){
+    if(e.key==="Tab" && !e.shiftKey){ e.preventDefault(); const g=ghost.text; ghost=null; src.setRangeText(g,src.selectionStart,src.selectionEnd,"end"); ac.suppress=true; src.dispatchEvent(new Event("input")); return; }
+    if(e.key==="Escape"){ e.preventDefault(); ghost=null; hl.querySelectorAll(".ghost,.ghost-hint").forEach(x=>x.remove()); return; }
+  }
+  if(e.key==="Tab"&&!e.shiftKey){ e.preventDefault(); const s=src.selectionStart; src.setRangeText("  ",s,src.selectionEnd,"end"); src.dispatchEvent(new Event("input")); } });
+document.addEventListener("click",e=>{
+  const st=e.target.closest("[data-start]"); if(st && !e.target.closest(".test")){ e.stopPropagation(); goTo(Number(st.dataset.start)); return; }
+  const tb=e.target.closest(".test"); if(tb){ selected=Number(tb.dataset.i); renderOutputs(); return; }
+  const vb=e.target.closest("[data-view]"); if(vb){ setView(vb.dataset.view); return; }
+  const lb=e.target.closest("[data-layer]"); if(lb){ layer=lb.dataset.layer; renderOutputs(); return; }
+  const db=e.target.closest("[data-dialect]"); if(db){ setDialect(db.dataset.dialect); }
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Enter"){ const st=e.target.closest&&e.target.closest("[data-start]"); if(st && st!==src){ e.preventDefault(); goTo(Number(st.dataset.start)); } } });
+function loadPreset(text){ const L=dialect; dialect="fr"; Object.assign(docs, splitPreset(text)); src.value=docs[activeDoc]; if(L!=="fr"){ setDialect(L); } else { markDialect(); compile(); } }
+$("btn-reset").addEventListener("click",()=>loadPreset(DEFAULT_SRC));
+$("btn-simple").addEventListener("click",()=>loadPreset(SIMPLE_SRC));
+$("btn-magic").addEventListener("click",e=>{ magic=!magic; e.currentTarget.setAttribute("aria-pressed",String(magic)); renderOutputs(); });
+$("btn-spaces").addEventListener("click",e=>{ showSpaces=!showSpaces; e.currentTarget.setAttribute("aria-pressed",String(showSpaces)); compile(); });
+$("btn-err").addEventListener("click",()=>{ syncDoc(); docs.rule=docs.rule.replace(/\.(titre|title)\)/, dialect==="fr"?".titr)":".titel)"); activeDoc==="rule"?refreshDoc():setDoc("rule"); });
+$("btn-loop").addEventListener("click",()=>{
+  syncDoc(); docs.lib=docs.lib.replace(/(fonction|fn) nom_apa\(p\) = [^\n]*/,'$1 nom_apa(p) = nom_apa(p) ++ "!"   # récursion sans fin'); activeDoc==="lib"?refreshDoc():setDoc("lib");
+});
+Object.assign(docs, splitPreset(DEFAULT_SRC)); src.value=docs.rule; markDoc(); markDialect(); applySide(); compile(); setView(view);
+/* Langue de l'interface : textes fixes (data-en), textes calculés, et le script suit à l'ouverture */
+function applyUI(first){
+  document.documentElement.lang=UIL; document.title=T("Atelier EPScript 2.0","EPScript 2.0 Workshop");
+  for(const el of document.querySelectorAll("[data-en]")){ if(el.dataset.fr==null) el.dataset.fr=el.innerHTML; const v=UIL==="en"?el.dataset.en:el.dataset.fr; if(el.innerHTML!==v) el.innerHTML=v; }
+  for(const a of ["title","aria-label"]) for(const el of document.querySelectorAll(`[data-en-${a}]`)){ const k="fr"+a.replace("-",""); if(el.dataset[k]==null) el.dataset[k]=el.getAttribute(a)||""; el.setAttribute(a, UIL==="en"?el.getAttribute(`data-en-${a}`):el.dataset[k]); }
+  document.querySelectorAll("[data-ui]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.ui===UIL)));
+  setTypeLabels(); setAccept();
+  document.querySelectorAll(".grip").forEach(g=>g.title=T("Glisser pour déplacer le panneau","Drag to move the panel"));
+  document.querySelectorAll("[data-move]").forEach(b=>{ const id=b.dataset.id, before=b.dataset.move==="-1"; b.title=before?T("Déplacer avant","Move before"):T("Déplacer après","Move after"); b.setAttribute("aria-label",`${T("Déplacer","Move")} ${Q(PANEL_NAME[id])} ${before?T("avant","before"):T("après","after")}`); });
+  document.querySelectorAll("[data-wide]").forEach(b=>{ b.title=T("Pleine largeur","Full width"); b.setAttribute("aria-label",T(`${Q(PANEL_NAME[b.dataset.wide])} en pleine largeur`,`${Q(PANEL_NAME[b.dataset.wide])} full width`)); });
+  document.querySelectorAll(".split").forEach(sp=>sp.title=T("Glisser pour élargir","Drag to resize"));
+  if(first && UIL==="en" && dialect!=="en") setDialect("en");   // un visiteur anglophone ouvre le script en anglais
+  markDoc(); applySide(); drawExamples(); compile();
+}
+function setUI(L, fromHash){
+  if(L!=="fr"&&L!=="en") return; const changed=L!==UIL; UIL=L;
+  try{ localStorage.setItem("atelier-epscript2-lang",L); }catch(_){}
+  if(!fromHash){ try{ history.replaceState(null,"","#"+L); }catch(_){} }
+  if(changed) applyUI(false);
+}
+document.addEventListener("click",e=>{ const b=e.target.closest("[data-ui]"); if(b) setUI(b.dataset.ui); });
+window.addEventListener("hashchange",()=>{ const h=location.hash.slice(1); if(h==="fr"||h==="en") setUI(h,true); });
+applyUI(true);
+document.addEventListener("click",e=>{
+  const db=e.target.closest("[data-doc]"); if(db){ if(db.dataset.doc!==activeDoc) setDoc(db.dataset.doc); src.focus(); return; }
+  if(e.target.closest("#side-toggle")){ sideCollapsed=!sideCollapsed; applySide(); try{ localStorage.setItem("atelier-epscript2-side",sideCollapsed?"1":"0"); }catch(_){} return; }
+  const df=e.target.closest("[data-def]"); if(df){ goTo(Number(df.dataset.def)); return; }
+  const ins=e.target.closest("[data-ins]");
+  if(ins){ if(view!=="code") setView("code"); src.focus(); const t=ins.dataset.ins;
+    src.setRangeText(t, src.selectionStart, src.selectionEnd, "end"); const b=Number(ins.dataset.back)||0; if(b){ const q=src.selectionStart-b; src.setSelectionRange(q,q); }
+    src.dispatchEvent(new Event("input")); }
+});
+</script>

@@ -1,0 +1,20 @@
+Licences du projet eprints-du-futur
+===================================
+
+Copyright © 2026 Robin Sylvestre (code et documents).
+Copyright © 2026 Robin Sylvestre (code and documents).
+
+Ce dépôt contient deux sortes de contenus, sous deux licences :
+
+1. Code (prototypes)
+   — dossier prototypes/
+   Licence : GNU Lesser General Public License, version 3 ou ultérieure (LGPL-3.0-or-later),
+   la même licence qu'EPrints.
+   Texte : LICENSES/LGPL-3.0-or-later.txt, qui complète LICENSES/GPL-3.0-or-later.txt.
+
+2. Documents (manifeste, documentation)
+   — dossier manifeste/ et les fichiers Markdown
+   Licence : Creative Commons Attribution 4.0 International (CC BY 4.0).
+   Texte : LICENSES/CC-BY-4.0.txt
+
+En cas de doute pour un fichier, l'en-tête du fichier fait foi.

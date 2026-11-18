@@ -1,0 +1,493 @@
+<title>Notice en strates</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Mise en page : un canevas en relief à gauche, l'inspecteur à droite ; dessous, les recouvrements et les deux écritures. */
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --sunken:#eaeef4; --fg:#18212d; --muted:#5d6878; --line:#d7dde6; --accent:#2f5fd0;
+  --ns-schema:#2f6fdb; --ns-dcterms:#b8561c; --ns-bibo:#7a4fc4; --ns-foaf:#18866a; --ns-prov:#b23a6c; --ns-oaihp:#8a7810;
+  --ns-ext:#5b6470; --ns-local:#3d4756; --ok:#22743a; --warn:#a4570a; --warn-soft:#fbefdc; --ok-soft:#e3f3e7;
+  --display:"Space Grotesk",system-ui,sans-serif; --ui:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141b; --surface:#161d27; --sunken:#1c2531; --fg:#e4e9f0; --muted:#97a3b3; --line:#2a3442; --accent:#86a8ff;
+  --ns-schema:#7aa7ff; --ns-dcterms:#f0a46a; --ns-bibo:#b89cf5; --ns-foaf:#5fd0ae; --ns-prov:#f08ab3; --ns-oaihp:#dccb5c;
+  --ns-ext:#a5afbb; --ns-local:#c3ccd8; --ok:#72d08c; --warn:#f2b45f; --warn-soft:#3a2c14; --ok-soft:#173222; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141b; --surface:#161d27; --sunken:#1c2531; --fg:#e4e9f0; --muted:#97a3b3; --line:#2a3442; --accent:#86a8ff;
+  --ns-schema:#7aa7ff; --ns-dcterms:#f0a46a; --ns-bibo:#b89cf5; --ns-foaf:#5fd0ae; --ns-prov:#f08ab3; --ns-oaihp:#dccb5c;
+  --ns-ext:#a5afbb; --ns-local:#c3ccd8; --ok:#72d08c; --warn:#f2b45f; --warn-soft:#3a2c14; --ok-soft:#173222; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:14px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:22px 40px}
+.wrap{max-width:1400px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font-family:var(--display);font-weight:600;font-size:28px;margin:0;letter-spacing:-.01em;text-wrap:balance}
+.sub{color:var(--muted);margin:4px 0 0;max-width:78ch}
+h2{font-family:var(--display);font-weight:600;font-size:12.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin:0}
+button{font:inherit;font-size:13px;font-weight:500;border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:6px;padding:5px 11px;cursor:pointer}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button[aria-pressed="true"]{background:color-mix(in srgb,var(--accent) 14%,var(--surface));border-color:var(--accent);color:var(--accent)}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:16px;align-items:start}
+@media (max-width:980px){.top{grid-template-columns:minmax(0,1fr)}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:10px;min-width:0}
+.card>header{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;padding:10px 14px;border-bottom:1px solid var(--line)}
+.stage{position:relative}
+canvas#scene{display:block;width:100%;height:560px;cursor:grab;touch-action:none;background:radial-gradient(ellipse at 50% 40%,var(--surface),var(--sunken))}
+canvas#scene.drag{cursor:grabbing}
+@media (max-width:600px){canvas#scene{height:420px}}
+.controls{display:flex;flex-wrap:wrap;gap:6px}
+.hint{position:absolute;left:12px;bottom:10px;font-size:12px;color:var(--muted);pointer-events:none}
+.tip{position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:4px 8px;font-size:12px;max-width:320px;box-shadow:0 6px 18px rgba(0,0,0,.14)}
+.side{display:flex;flex-direction:column;gap:16px}
+.pad{padding:12px 14px}
+.nslist{display:flex;flex-direction:column;gap:6px}
+.ns{display:grid;grid-template-columns:auto auto 1fr auto;gap:8px;align-items:center;font-size:13px}
+.ns input{margin:0;accent-color:var(--accent)}
+.chip{font-family:var(--mono);font-size:12px;font-weight:500;border-radius:4px;padding:0 5px;color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent);white-space:nowrap}
+.iri{font-family:var(--mono);font-size:11.5px;color:var(--muted);overflow-wrap:anywhere;min-width:0}
+.count{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+#inspect{max-height:520px;overflow:auto}
+.inspect h3{font-family:var(--display);font-size:17px;margin:0 0 2px;text-wrap:balance}
+.inspect .meta{font-size:12px;color:var(--muted);margin-bottom:10px;overflow-wrap:anywhere}
+.tri{font-family:var(--mono);font-size:12px;line-height:1.55;margin:0;white-space:pre-wrap;overflow-wrap:anywhere}
+.group{margin-top:8px}
+.group .gh{font-size:11.5px;color:var(--muted);margin-bottom:2px}
+.empty{color:var(--muted);font-size:13px}
+.overlaps{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px;padding:12px 14px}
+.ov{border:1px solid var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;background:var(--surface);text-align:left;font-weight:400;display:flex;flex-direction:column;gap:4px}
+.ov[aria-pressed="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 8%,var(--surface));color:var(--fg)}
+.ov .t{display:flex;justify-content:space-between;gap:8px;align-items:baseline;font-weight:600;font-size:13px}
+.badge{font-size:11px;font-weight:600;border-radius:999px;padding:1px 8px;white-space:nowrap}
+.b-ok{color:var(--ok);background:var(--ok-soft)} .b-warn{color:var(--warn);background:var(--warn-soft)}
+.ov .vals{font-size:12px;display:flex;flex-direction:column;gap:2px}
+.ov .vals span{overflow-wrap:anywhere}
+.code{font-family:var(--mono);font-size:12.5px;line-height:1.6;white-space:pre;overflow:auto;max-height:520px;margin:0;padding:12px 14px;background:var(--sunken);border-radius:0 0 10px 10px}
+.code .p{border-radius:3px;padding:0 2px;color:var(--c);background:color-mix(in srgb,var(--c) 13%,transparent);cursor:help}
+.code .s{color:var(--ok)} .code .k{color:var(--muted)} .code .fold{color:var(--accent);cursor:pointer;text-decoration:underline dotted}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.langs{display:flex;gap:4px;flex:none}
+footer{color:var(--muted);font-size:12.5px;max-width:95ch}
+@media (prefers-reduced-motion: reduce){*{transition:none !important}}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div>
+    <h1 data-i18n="title">Notice en strates</h1>
+    <p class="sub" data-i18n="sub">Une même notice décrite par six vocabulaires. Chaque vocabulaire est un plan, et une ressource occupe la même place sur chaque plan où elle est décrite : le trait vertical qui relie ses descriptions, c'est son identité. Les sources externes forment l'anneau extérieur. Faites tourner la vue, aplatissez-la pour voir les recouvrements, cliquez une ressource pour lire ses triplets.</p>
+    </div>
+    <div class="langs" role="group" aria-label="Langue de l'interface / Interface language">
+      <button type="button" data-lang="fr" lang="fr" aria-pressed="true">FR</button>
+      <button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button>
+    </div>
+  </header>
+
+  <div class="top">
+    <section class="card" aria-labelledby="h-scene">
+      <header>
+        <h2 id="h-scene" data-i18n="h-scene">Vue en relief</h2>
+        <div class="controls">
+          <button type="button" id="b-rot" aria-pressed="false" data-i18n="rot">Rotation</button>
+          <button type="button" id="b-flat" aria-pressed="false" data-i18n="flat">Aplatir</button>
+          <button type="button" id="b-lit" aria-pressed="false" data-i18n="lit">Valeurs</button>
+          <button type="button" id="b-ext" aria-pressed="true" data-i18n="ext">Sources externes</button>
+          <button type="button" id="b-zin" aria-label="Rapprocher" data-i18n-aria="zin">+</button>
+          <button type="button" id="b-zout" aria-label="Éloigner" data-i18n-aria="zout">−</button>
+          <button type="button" id="b-reset" data-i18n="reset">Recentrer</button>
+        </div>
+      </header>
+      <div class="stage">
+        <canvas id="scene" data-i18n-aria="scene" aria-label="Graphe en relief de la notice 12345, un plan par vocabulaire"></canvas>
+        <div class="tip" id="tip" hidden></div>
+        <div class="hint" data-i18n="hint">Glisser pour tourner · molette ou +/− pour zoomer · clic pour inspecter</div>
+      </div>
+    </section>
+
+    <div class="side">
+      <section class="card" aria-labelledby="h-ns">
+        <header><h2 id="h-ns" data-i18n="h-ns">Espaces de noms</h2><span class="count" id="ns-total"></span></header>
+        <div class="pad nslist" id="nslist"></div>
+      </section>
+      <section class="card inspect" aria-labelledby="h-insp">
+        <header><h2 id="h-insp" data-i18n="h-insp">Inspecteur</h2></header>
+        <div class="pad" id="inspect"></div>
+      </section>
+    </div>
+  </div>
+
+  <section class="card" aria-labelledby="h-ov">
+    <header><h2 id="h-ov" data-i18n="h-ov">Recouvrements entre schémas</h2><span class="count" data-i18n="ov-hint">cliquez un fait pour le surligner dans la vue</span></header>
+    <div class="overlaps" id="overlaps"></div>
+  </section>
+
+  <section class="card" aria-labelledby="h-src">
+    <header>
+      <h2 id="h-src" data-i18n="h-src">Deux écritures de la même notice</h2>
+      <div class="tabs">
+        <button type="button" data-fmt="ttl" aria-pressed="true">Turtle</button>
+        <button type="button" data-fmt="xml" aria-pressed="false">RDF/XML</button>
+        <span style="width:8px"></span>
+        <button type="button" data-mode="lisible" aria-pressed="true" data-i18n="m-lisible">Préfixes en couleur</button>
+        <button type="button" data-mode="brut" aria-pressed="false" data-i18n="m-brut">Brut</button>
+      </div>
+    </header>
+    <pre class="code" id="code" tabindex="0"></pre>
+  </section>
+
+  <footer data-i18n-html="footer">Prototype pour <em>EPrints du futur</em> (manifeste, §4.15). La notice, les personnes et les identifiants locaux sont fictifs. Le DOI utilise le préfixe de test de Crossref (10.5555), l'ORCID est l'identifiant de démonstration d'ORCID, et les identifiants ROR et Wikidata sont des exemples factices. L'espace de noms <code>oaihp:</code> est un brouillon. Les données sont stockées une seule fois ; chaque plan est une projection.</footer>
+  <p class="signature" style="margin:0;color:var(--muted);font-size:12.5px">Copyright © 2026 Robin Sylvestre<br>Robin Sylvestre avec Claude Code<br>PolyPublie ❤️ Polytechnique Montréal</p>
+</div>
+
+<script>
+/* ---------- Langue de l'interface (FR / EN) ---------- */
+let lang="fr";
+const tx=(fr,en)=> lang==="en" ? en : fr;
+const loc=v=> v && typeof v==="object" ? v[lang] : v;
+const I18N={
+  title:["Notice en strates","Record in Strata"],
+  sub:["Une même notice décrite par six vocabulaires. Chaque vocabulaire est un plan, et une ressource occupe la même place sur chaque plan où elle est décrite : le trait vertical qui relie ses descriptions, c'est son identité. Les sources externes forment l'anneau extérieur. Faites tourner la vue, aplatissez-la pour voir les recouvrements, cliquez une ressource pour lire ses triplets.",
+       "One record described by six vocabularies. Each vocabulary is a plane, and a resource sits at the same place on every plane that describes it. The vertical line joining its descriptions is its identity. External sources form the outer ring. Rotate the view, flatten it to see the overlaps, and click a resource to read its triples."],
+  "h-scene":["Vue en relief","3D view"], rot:["Rotation","Rotate"], flat:["Aplatir","Flatten"], lit:["Valeurs","Values"],
+  ext:["Sources externes","External sources"], zin:["Rapprocher","Zoom in"], zout:["Éloigner","Zoom out"], reset:["Recentrer","Recenter"],
+  scene:["Graphe en relief de la notice 12345, un plan par vocabulaire","3D graph of record 12345, one plane per vocabulary"],
+  hint:["Glisser pour tourner · molette ou +/− pour zoomer · clic pour inspecter","Drag to rotate · wheel or +/− to zoom · click to inspect"],
+  "h-ns":["Espaces de noms","Namespaces"], "h-insp":["Inspecteur","Inspector"],
+  "h-ov":["Recouvrements entre schémas","Overlaps between schemas"],
+  "ov-hint":["cliquez un fait pour le surligner dans la vue","click a fact to highlight it in the view"],
+  "h-src":["Deux écritures de la même notice","Two serializations of the same record"],
+  "m-lisible":["Préfixes en couleur","Coloured prefixes"], "m-brut":["Brut","Raw"],
+  footer:["Prototype pour <em>EPrints du futur</em> (manifeste, §4.15). La notice, les personnes et les identifiants locaux sont fictifs. Le DOI utilise le préfixe de test de Crossref (10.5555), l'ORCID est l'identifiant de démonstration d'ORCID, et les identifiants ROR et Wikidata sont des exemples factices. L'espace de noms <code>oaihp:</code> est un brouillon. Les données sont stockées une seule fois ; chaque plan est une projection.",
+          "Prototype for <em>EPrints du futur</em> (manifesto, §4.15). The record, the people and the local identifiers are fictional. The DOI uses Crossref's test prefix (10.5555), the ORCID is ORCID's demonstration identifier, and the ROR and Wikidata identifiers are made-up examples. The <code>oaihp:</code> namespace is a draft. The data is stored once; each plane is a projection."]
+};
+const i18n=k=>tx(...I18N[k]);
+
+/* ---------- Données : la notice 12345 dans six vocabulaires ---------- */
+const NS = [
+  {p:"schema", iri:"https://schema.org/", name:"schema.org"},
+  {p:"dcterms", iri:"http://purl.org/dc/terms/", name:"Dublin Core"},
+  {p:"bibo", iri:"http://purl.org/ontology/bibo/", name:"BIBO"},
+  {p:"foaf", iri:"http://xmlns.com/foaf/0.1/", name:"FOAF"},
+  {p:"prov", iri:"http://www.w3.org/ns/prov#", name:"PROV-O"},
+  {p:"oaihp", iri:"https://oaihp.exemple.org/ns#", name:{fr:"OAIHP (brouillon)",en:"OAIHP (draft)"}}
+];
+const OTHER_NS = {rdf:"http://www.w3.org/1999/02/22-rdf-syntax-ns#", owl:"http://www.w3.org/2002/07/owl#", xsd:"http://www.w3.org/2001/XMLSchema#", ex:"https://depot.exemple.org/id/"};
+const ENT = {
+  rec:{iri:"ex:12345", label:{fr:"Notice 12345",en:"Record 12345"}, angle:null},
+  person:{iri:"ex:personne/bouchard-me", label:"M.-È. Bouchard", angle:20},
+  org:{iri:"ex:org/polytechnique", label:"Polytechnique Montréal", angle:95},
+  license:{iri:"<https://creativecommons.org/licenses/by/4.0/>", label:"CC BY 4.0", angle:160},
+  degree:{iri:"<http://purl.org/ontology/bibo/degrees/phd>", label:{fr:"Ph. D.",en:"PhD"}, angle:215},
+  file:{iri:"ex:12345/fichier/these.pdf", label:"these.pdf", angle:265},
+  activity:{iri:"ex:activite/depot-12345", label:{fr:"Dépôt du 12 mai 2025",en:"Deposit, 12 May 2025"}, angle:315},
+  event:{iri:"ex:evenement/7781", label:{fr:"Événement 7781",en:"Event 7781"}, angle:240}
+};
+ENT.event.angle=355;
+const EXT = [
+  {id:"x-doi", of:"rec", iri:"<https://doi.org/10.5555/exemple.2025.001>", label:"Crossref · DOI", angle:200},
+  {id:"x-orcid", of:"person", iri:"<https://orcid.org/0000-0002-1825-0097>", label:"ORCID", angle:20},
+  {id:"x-ror", of:"org", iri:"<https://ror.org/0exemple00>", label:{fr:"ROR (exemple)",en:"ROR (example)"}, angle:80},
+  {id:"x-wd", of:"org", iri:"<https://www.wikidata.org/entity/Q0000000>", label:{fr:"Wikidata (exemple)",en:"Wikidata (example)"}, angle:110}
+];
+const TITLE="Optimisation topologique de structures en treillis imprimées en 3D";
+const T = [
+  ["rec","rdf:type","schema:Thesis"],["rec","schema:name",TITLE],["rec","schema:author","@person"],["rec","schema:datePublished","2025-05"],
+  ["rec","schema:inLanguage","fr"],["rec","schema:license","@license"],["rec","schema:sourceOrganization","@org"],
+  ["rec","schema:identifier","https://doi.org/10.5555/exemple.2025.001"],["rec","schema:associatedMedia","@file"],
+  ["person","rdf:type","schema:Person"],["person","schema:familyName","Bouchard"],["person","schema:givenName","Marie-Ève"],["person","schema:affiliation","@org"],
+  ["org","rdf:type","schema:CollegeOrUniversity"],["org","schema:name","Polytechnique Montréal"],
+  ["file","rdf:type","schema:MediaObject"],["file","schema:encodingFormat","application/pdf"],
+  ["rec","dcterms:title",TITLE],["rec","dcterms:creator","@person"],["rec","dcterms:issued","2025-04"],["rec","dcterms:language","fra"],
+  ["rec","dcterms:license","@license"],["rec","dcterms:publisher","@org"],["rec","dcterms:identifier","doi:10.5555/exemple.2025.001"],
+  ["rec","dcterms:hasPart","@file"],["rec","dcterms:abstract","Cette thèse propose une méthode d'optimisation topologique adaptée aux contraintes de la fabrication additive."],
+  ["rec","rdf:type","bibo:Thesis"],["rec","bibo:doi","10.5555/exemple.2025.001"],["rec","bibo:degree","@degree"],
+  ["rec","foaf:maker","@person"],["person","rdf:type","foaf:Person"],["person","foaf:name","Marie-Ève Bouchard"],["person","foaf:familyName","Bouchard"],
+  ["org","rdf:type","foaf:Organization"],["org","foaf:name","Polytechnique Montréal"],["person","foaf:member","@org"],
+  ["rec","rdf:type","prov:Entity"],["rec","prov:wasGeneratedBy","@activity"],["rec","prov:wasAttributedTo","@person"],["rec","prov:generatedAtTime","2025-05-12T14:03:00Z"],
+  ["activity","rdf:type","prov:Activity"],["activity","prov:wasAssociatedWith","@person"],["activity","prov:endedAtTime","2025-05-12T14:03:00Z"],
+  ["rec","oaihp:digest","sha256:9f2c…e41a"],["rec","oaihp:lastEvent","@event"],["rec","oaihp:aiPreference","train-ai=n"],
+  ["event","oaihp:eventType","updated"],["event","oaihp:at","2025-06-02T09:15:00Z"],["event","oaihp:previousDigest","sha256:51b0…07cc"]
+].map(([s,p,o],i)=>({i,s,p,o:o.startsWith("@")?o.slice(1):o,ref:o.startsWith("@"),ns:p==="rdf:type"?o.split(":")[0]:p.split(":")[0]}));
+// Faits exprimés par plusieurs vocabulaires : on les compare après normalisation.
+const LANG3={fra:"fr",eng:"en"};
+const norm={doi:v=>v.replace(/^https?:\/\/(dx\.)?doi\.org\/|^doi:/i,""), lang:v=>LANG3[v]||v, id:v=>v};
+const FACTS=[
+  {label:{fr:"Titre",en:"Title"}, preds:["schema:name","dcterms:title"], subj:"rec", n:"id"},
+  {label:{fr:"Auteur",en:"Author"}, preds:["schema:author","dcterms:creator","foaf:maker","prov:wasAttributedTo"], subj:"rec", n:"id"},
+  {label:{fr:"Date de publication",en:"Publication date"}, preds:["schema:datePublished","dcterms:issued"], subj:"rec", n:"id"},
+  {label:{fr:"Langue",en:"Language"}, preds:["schema:inLanguage","dcterms:language"], subj:"rec", n:"lang"},
+  {label:{fr:"Licence",en:"Licence"}, preds:["schema:license","dcterms:license"], subj:"rec", n:"id"},
+  {label:"DOI", preds:["schema:identifier","dcterms:identifier","bibo:doi"], subj:"rec", n:"doi"},
+  {label:{fr:"Établissement",en:"Institution"}, preds:["schema:sourceOrganization","dcterms:publisher"], subj:"rec", n:"id"},
+  {label:{fr:"Nom de famille",en:"Family name"}, preds:["schema:familyName","foaf:familyName"], subj:"person", n:"id"},
+  {label:{fr:"Type de document",en:"Document type"}, preds:["rdf:type"], subj:"rec", n:"id", types:true}
+];
+
+/* ---------- Couleurs depuis le thème ---------- */
+let COL={};
+function readColors(){ const cs=getComputedStyle(document.documentElement);
+  for(const k of ["fg","muted","line","surface","sunken","accent","warn","ns-ext","ns-local"]) COL[k]=cs.getPropertyValue("--"+k).trim();
+  for(const n of NS) COL[n.p]=cs.getPropertyValue("--ns-"+n.p).trim(); }
+readColors();
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>{ readColors(); draw(); renderAll(); });
+new MutationObserver(()=>{ readColors(); draw(); }).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+const nsColorVar=p=> NS.some(n=>n.p===p) ? `var(--ns-${p})` : p==="ex"?"var(--ns-local)":"var(--ns-ext)";
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+/* ---------- Géométrie : un plan par vocabulaire ---------- */
+const R=165, GAP=78, HALF=275, RING=360;
+const visible=Object.fromEntries(NS.map(n=>[n.p,true]));
+let gap=GAP, gapTarget=GAP, showLit=false, showExt=true, highlight=null, selected="rec";
+const nodes=[], edges=[];
+function entXZ(e){ const a=ENT[e].angle; if(a==null) return [0,0]; const r=a*Math.PI/180; return [Math.cos(r)*R, Math.sin(r)*R]; }
+function build(){
+  nodes.length=0; edges.length=0;
+  const planeIdx=Object.fromEntries(NS.map((n,i)=>[n.p,i]));
+  const key=(e,p)=>e+"@"+p, byKey={};
+  const ensure=(e,p)=>{ const k=key(e,p); if(!byKey[k]){ const [x,z]=entXZ(e); byKey[k]={id:k,kind:"ent",ent:e,ns:p,x,z,plane:planeIdx[p],types:[]}; nodes.push(byKey[k]); } return byKey[k]; };
+  const litCount={};
+  for(const t of T){
+    if(!(t.ns in planeIdx)) continue;
+    const a=ensure(t.s,t.ns);
+    if(t.p==="rdf:type"){ a.types.push(t.o); a.typeTriples=(a.typeTriples||[]).concat(t.i); continue; }
+    if(t.ref){ const b=ensure(t.o,t.ns); edges.push({a,b,kind:"triple",t}); }
+    else {
+      const k=key(t.s,t.ns); const n=(litCount[k]=(litCount[k]||0)+1)-1;
+      const total=T.filter(u=>u.s===t.s&&u.ns===t.ns&&!u.ref&&u.p!=="rdf:type").length;
+      let x,z; const base=ENT[t.s].angle;
+      if(base==null){ const ang=(n+.5)/total*2*Math.PI+0.35; x=Math.cos(ang)*R*.55; z=Math.sin(ang)*R*.55; }
+      else { const ang=(base+(n-(total-1)/2)*15)*Math.PI/180; x=Math.cos(ang)*R*1.42; z=Math.sin(ang)*R*1.42; }
+      const ln={id:"lit"+t.i,kind:"lit",ns:t.ns,x,z,plane:planeIdx[t.ns],t,label:t.o};
+      nodes.push(ln); edges.push({a,b:ln,kind:"triple",t});
+    }
+  }
+  // axes d'identité : une même ressource d'un plan à l'autre
+  for(const e of Object.keys(ENT)){
+    const ps=nodes.filter(n=>n.kind==="ent"&&n.ent===e).sort((u,v)=>u.plane-v.plane);
+    for(let i=1;i<ps.length;i++) edges.push({a:ps[i-1],b:ps[i],kind:"id",ent:e});
+  }
+  for(const x of EXT){ const r=x.angle*Math.PI/180; const n={id:x.id,kind:"ext",x:Math.cos(r)*RING,z:Math.sin(r)*RING,plane:null,ext:x,label:x.label}; nodes.push(n);
+    edges.push({a:null,ent:x.of,b:n,kind:"same"}); }
+}
+build();
+
+/* ---------- Caméra et projection ---------- */
+const cv=document.getElementById("scene"), ctx=cv.getContext("2d");
+const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let yaw=-0.6, pitch=0.42, zoom=1, auto=false, W=0, H=0, dpr=1;
+const DIST=1100;
+function resize(){ dpr=window.devicePixelRatio||1; const r=cv.getBoundingClientRect(); W=r.width; H=r.height; cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); ctx.setTransform(dpr,0,0,dpr,0,0); draw(); }
+const planeY=i=> (i-(NS.length-1)/2)*gap;
+function yOf(n){ if(n.plane==null) return 0; let k=0, idx=-1; NS.forEach((ns,i)=>{ if(visible[ns.p]){ if(i===n.plane) idx=k; k++; } }); return (idx-(k-1)/2)*gap; }
+function proj(x,y,z){
+  const cy=Math.cos(yaw), sy=Math.sin(yaw), cp=Math.cos(pitch), sp=Math.sin(pitch);
+  const x1=x*cy-z*sy, z1=x*sy+z*cy;
+  const y2=y*cp-z1*sp, z2=y*sp+z1*cp;
+  const f=zoom*DIST/(DIST+z2)*Math.min(W,H)/620;
+  return {x:W/2+x1*f, y:H/2-y2*f, z:z2, f};
+}
+const visibleNode=n=> n.kind==="ext" ? showExt : (visible[n.ns] && (n.kind!=="lit"||true));
+let screen=[];
+function rgba(hex,a){ if(!hex) return `rgba(128,128,128,${a})`; if(hex.startsWith("#")){ let h=hex.slice(1); if(h.length===3) h=h.split("").map(c=>c+c).join(""); const v=parseInt(h,16); return `rgba(${v>>16&255},${v>>8&255},${v&255},${a})`; } return hex; }
+function draw(){
+  if(!W) return;
+  ctx.clearRect(0,0,W,H);
+  // plans
+  const planes=NS.map((n,i)=>({n,i})).filter(o=>visible[o.n.p]).map(o=>{ const y=yOf({plane:o.i}); const c=[[-HALF,y,-HALF],[HALF,y,-HALF],[HALF,y,HALF],[-HALF,y,HALF]].map(p=>proj(...p)); return {...o,y,c,depth:c.reduce((s,p)=>s+p.z,0)/4}; }).sort((a,b)=>b.depth-a.depth);
+  for(const pl of planes){
+    ctx.beginPath(); pl.c.forEach((p,k)=>k?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y)); ctx.closePath();
+    ctx.fillStyle=rgba(COL[pl.n.p],gap<8?0.025:0.06); ctx.fill(); ctx.strokeStyle=rgba(COL[pl.n.p],0.45); ctx.lineWidth=1; ctx.stroke();
+    if(gap>=8){ const p=pl.c[0]; ctx.fillStyle=COL[pl.n.p]; ctx.font="600 12px "+getComputedStyle(document.body).getPropertyValue("--mono"); ctx.fillText(pl.n.p+":", p.x+6, p.y-6); }
+  }
+  // positions écran
+  screen=[]; const pos={};
+  for(const n of nodes){ if(!visibleNode(n)) continue; const p=proj(n.x,yOf(n),n.z); pos[n.id]=p; screen.push({n,p}); }
+  const hl=highlight?new Set(highlight):null;
+  // arêtes
+  for(const e of edges){
+    let a=e.a, b=e.b;
+    if(e.kind==="same"){ if(!showExt) continue; const cands=nodes.filter(n=>n.kind==="ent"&&n.ent===e.ent&&visible[n.ns]); if(!cands.length) continue; a=cands.reduce((m,n)=>Math.abs(yOf(n))<Math.abs(yOf(m))?n:m); }
+    const pa=pos[a.id], pb=pos[b.id]; if(!pa||!pb) continue;
+    if(e.kind==="triple" && b.kind==="lit" && !showLit && !(hl&&hl.has(e.t.i))) { ctx.globalAlpha=0.35; }
+    ctx.beginPath(); ctx.moveTo(pa.x,pa.y); ctx.lineTo(pb.x,pb.y);
+    if(e.kind==="id"){ ctx.setLineDash([3,4]); ctx.strokeStyle=rgba(COL.fg,0.45); ctx.lineWidth=1.4; }
+    else if(e.kind==="same"){ ctx.setLineDash([6,4]); ctx.strokeStyle=rgba(COL["ns-ext"],0.8); ctx.lineWidth=1.2; }
+    else { ctx.setLineDash([]); const on=hl&&hl.has(e.t.i); ctx.strokeStyle=rgba(COL[e.t.ns], hl?(on?1:0.12):0.7); ctx.lineWidth=on?3:1.3; }
+    ctx.stroke(); ctx.setLineDash([]); ctx.globalAlpha=1;
+  }
+  // nœuds, du plus loin au plus proche
+  screen.sort((u,v)=>v.p.z-u.p.z);
+  const topPlane={}; for(const {n} of screen) if(n.kind==="ent") topPlane[n.ent]=Math.max(topPlane[n.ent]??-1, n.plane);
+  const mono=getComputedStyle(document.body).getPropertyValue("--mono"), ui=getComputedStyle(document.body).getPropertyValue("--ui");
+  for(const {n,p} of screen){
+    const isSel = n.kind==="ent" && n.ent===selected || n.kind==="ext" && n.id===selected;
+    const lit=n.kind==="lit", r=(lit?3:n.kind==="ext"?6:n.ent==="rec"?8:6)*Math.max(.6,p.f);
+    const on = hl && lit && hl.has(n.t.i) || hl && n.kind==="ent" && n.typeTriples && n.typeTriples.some(i=>hl.has(i));
+    const c = n.kind==="ext" ? COL["ns-ext"] : COL[n.ns];
+    ctx.globalAlpha = hl && !on && lit ? 0.25 : 1;
+    ctx.beginPath(); ctx.arc(p.x,p.y,r,0,Math.PI*2);
+    ctx.fillStyle = n.kind==="ext" ? COL.surface : c; ctx.fill();
+    ctx.lineWidth = isSel||on ? 3 : 1.5; ctx.strokeStyle = isSel ? COL.accent : (n.kind==="ext"? c : COL.surface); ctx.stroke();
+    if(!lit || showLit || on){
+      const label = lit ? (n.label.length>34? n.label.slice(0,33)+"…" : n.label) : n.kind==="ext" ? loc(n.label) : loc(ENT[n.ent].label);
+      ctx.font = (lit? "11px ": n.ent==="rec"?"600 12.5px ":"500 12px ")+(lit?mono:ui);
+      ctx.fillStyle = lit ? rgba(COL.fg,0.85) : COL.fg;
+      if(n.kind==="ent" && n.plane!==topPlane[n.ent]) { ctx.globalAlpha=1; continue; } // une ressource n'est nommée qu'une fois
+      ctx.fillText(label, p.x+r+4, p.y+4);
+    }
+    ctx.globalAlpha=1;
+  }
+}
+
+/* ---------- Interaction ---------- */
+let drag=null, moved=false;
+cv.addEventListener("pointerdown",e=>{ drag={x:e.clientX,y:e.clientY,yaw,pitch}; moved=false; cv.setPointerCapture(e.pointerId); cv.classList.add("drag"); });
+cv.addEventListener("pointermove",e=>{
+  if(drag){ const dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>3) moved=true;
+    yaw=drag.yaw+dx*0.008; pitch=Math.max(-1.45,Math.min(1.45,drag.pitch+dy*0.006)); draw(); return; }
+  const h=hit(e); const tip=document.getElementById("tip");
+  if(h){ const r=cv.getBoundingClientRect(); tip.hidden=false; tip.style.left=(e.clientX-r.left+14)+"px"; tip.style.top=(e.clientY-r.top+10)+"px";
+    tip.innerHTML= h.kind==="lit" ? `<span class="chip" style="--c:${nsColorVar(h.t.ns)}">${esc(h.t.p)}</span> ${esc(h.t.o)}` : h.kind==="ext" ? `${esc(loc(h.label))}<br><span class="iri">${esc(h.ext.iri)}</span>` : `${esc(loc(ENT[h.ent].label))} <span class="chip" style="--c:${nsColorVar(h.ns)}">${esc(h.ns)}:</span>${h.types.length?" "+h.types.map(esc).join(", "):""}`;
+    cv.style.cursor="pointer"; }
+  else { tip.hidden=true; cv.style.cursor=""; }
+});
+cv.addEventListener("pointerup",e=>{ cv.classList.remove("drag"); if(drag && !moved){ const h=hit(e); if(h){ selected = h.kind==="ext" ? h.id : h.kind==="lit" ? h.t.s : h.ent; if(h.kind==="lit") highlight=[h.t.i]; renderInspect(); draw(); } } drag=null; });
+cv.addEventListener("pointerleave",()=>{ document.getElementById("tip").hidden=true; });
+cv.addEventListener("wheel",e=>{ e.preventDefault(); zoom=Math.max(.45,Math.min(2.6,zoom*Math.exp(-e.deltaY*0.0012))); draw(); },{passive:false});
+function hit(e){ const r=cv.getBoundingClientRect(), x=e.clientX-r.left, y=e.clientY-r.top; let best=null, bd=12;
+  for(const {n,p} of screen){ if(n.kind==="lit" && !showLit && !(highlight&&highlight.includes(n.t.i))) { const d=Math.hypot(p.x-x,p.y-y); if(d<6&&d<bd){bd=d;best=n;} continue; } const d=Math.hypot(p.x-x,p.y-y); if(d<bd){ bd=d; best=n; } } return best; }
+const tog=(id,fn)=>document.getElementById(id).addEventListener("click",e=>{ const v=fn(); e.currentTarget.setAttribute("aria-pressed",String(v)); draw(); });
+tog("b-rot",()=>{ auto=!auto; if(auto) loop(); return auto; });
+tog("b-flat",()=>{ gapTarget = gapTarget>0 ? 0 : GAP; animateGap(); if(gapTarget===0){ pitch=1.35; } else { pitch=0.42; } return gapTarget===0; });
+tog("b-lit",()=>(showLit=!showLit));
+tog("b-ext",()=>(showExt=!showExt));
+document.getElementById("b-zin").addEventListener("click",()=>{ zoom=Math.min(2.6,zoom*1.15); draw(); });
+document.getElementById("b-zout").addEventListener("click",()=>{ zoom=Math.max(.45,zoom/1.15); draw(); });
+document.getElementById("b-reset").addEventListener("click",()=>{ yaw=-0.6; pitch=gapTarget?0.42:1.35; zoom=1; draw(); });
+function animateGap(){ if(reduce){ gap=gapTarget; draw(); return; } const step=()=>{ gap+= (gapTarget-gap)*0.18; if(Math.abs(gap-gapTarget)<0.5) gap=gapTarget; draw(); if(gap!==gapTarget) requestAnimationFrame(step); }; requestAnimationFrame(step); }
+function loop(){ if(!auto) return; yaw+=0.004; draw(); requestAnimationFrame(loop); }
+new ResizeObserver(resize).observe(cv);
+
+/* ---------- Espaces de noms ---------- */
+function renderNS(){
+  document.getElementById("ns-total").textContent=tx(`${NS.length} plans · ${T.length} triplets`,`${NS.length} planes · ${T.length} triples`);
+  document.getElementById("nslist").innerHTML=NS.map(n=>{ const c=T.filter(t=>t.ns===n.p).length;
+    return `<label class="ns"><input type="checkbox" id="ns-${n.p}" data-ns="${n.p}" ${visible[n.p]?"checked":""}><span class="chip" style="--c:var(--ns-${n.p})">${n.p}:</span><span class="iri" title="${esc(loc(n.name))}">${esc(n.iri)}</span><span class="count">${c}</span></label>`; }).join("")+
+    `<div class="ns" style="grid-template-columns:auto 1fr"><span class="chip" style="--c:var(--ns-ext)">owl:sameAs</span><span class="iri">${tx("sources externes : ORCID, ROR, Crossref, Wikidata","external sources: ORCID, ROR, Crossref, Wikidata")}</span></div>`;
+}
+document.getElementById("nslist").addEventListener("change",e=>{ const p=e.target.dataset.ns; if(!p) return; visible[p]=e.target.checked; draw(); });
+
+/* ---------- Inspecteur ---------- */
+function termHTML(v){ const m=/^([a-z]+):(.*)$/.exec(v); if(m && (NS.some(n=>n.p===m[1])||m[1] in OTHER_NS)) return `<span class="chip" style="--c:${nsColorVar(m[1])}">${m[1]}:</span>${esc(m[2])}`; return esc(v); }
+function objHTML(t){ return t.ref ? termHTML(ENT[t.o].iri) : t.p==="rdf:type" ? termHTML(t.o) : `<span style="color:var(--ok)">"${esc(t.o)}"</span>`; }
+function renderInspect(){
+  const box=document.getElementById("inspect");
+  const ext=EXT.find(x=>x.id===selected);
+  if(ext){ const of=esc(loc(ENT[ext.of].label)), same=`<span class="chip" style="--c:var(--ns-ext)">owl:</span>sameAs`;
+    box.innerHTML=`<h3>${esc(loc(ext.label))}</h3><div class="meta">${esc(ext.iri)}</div><p class="empty">${tx(`Source externe, reliée à « ${of} » par ${same}. Ses propres données restent chez elle ; le dépôt n'en garde que le lien.`,`External source, linked to “${of}” by ${same}. Its own data stays there; the repository keeps only the link.`)}</p>`; return; }
+  const e=selected, out=T.filter(t=>t.s===e), inc=T.filter(t=>t.ref&&t.o===e);
+  const planes=NS.filter(n=>out.some(t=>t.ns===n.p)||inc.some(t=>t.ns===n.p));
+  const exts=EXT.filter(x=>x.of===e);
+  const np=planes.length;
+  let h=`<h3>${esc(loc(ENT[e].label))}</h3><div class="meta">${termHTML(ENT[e].iri)} · ${tx(`décrite dans ${np} vocabulaire${np>1?"s":""}`,`described in ${np} vocabular${np>1?"ies":"y"}`)}</div>`;
+  for(const n of planes){ const ts=out.filter(t=>t.ns===n.p);
+    if(!ts.length) continue;
+    h+=`<div class="group"><div class="gh">${esc(loc(n.name))}</div><pre class="tri">${ts.map(t=>`${termHTML(t.p==="rdf:type"?"rdf:type":t.p)} ${objHTML(t)}`).join(" ;\n")} .</pre></div>`; }
+  if(inc.length) h+=`<div class="group"><div class="gh">${tx("Citée par","Referenced by")}</div><pre class="tri">${inc.map(t=>`${esc(loc(ENT[t.s].label))} ${termHTML(t.p)}`).join("\n")}</pre></div>`;
+  if(exts.length) h+=`<div class="group"><div class="gh">${tx("Identités externes","External identities")}</div><pre class="tri">${exts.map(x=>`${termHTML("owl:sameAs")} ${esc(x.iri)}`).join(" ;\n")}</pre></div>`;
+  box.innerHTML=h;
+}
+
+/* ---------- Recouvrements ---------- */
+function renderOverlaps(){
+  const box=document.getElementById("overlaps");
+  box.innerHTML=FACTS.map((f,k)=>{
+    const ts=T.filter(t=>t.s===f.subj && f.preds.includes(t.p) && (!f.types||t.p==="rdf:type"));
+    const vals=ts.map(t=> f.types? t.o : t.ref? loc(ENT[t.o].label) : norm[f.n](t.o));
+    const same=f.types ? true : new Set(vals).size===1;
+    const raw=new Set(ts.map(t=>t.o)).size>1;
+    const badge= same ? (raw && !f.types ? `<span class="badge b-ok">${tx("concordent · écrits autrement","agree · written differently")}</span>` : `<span class="badge b-ok">${f.types?tx("types complémentaires","complementary types"):tx("concordent","agree")}</span>`) : `<span class="badge b-warn">${tx("divergent","conflict")}</span>`;
+    return `<button type="button" class="ov" data-ov="${k}" aria-pressed="false"><span class="t">${esc(loc(f.label))} · ${tx(`${ts.length} fois`,`${ts.length} time${ts.length>1?"s":""}`)} ${badge}</span><span class="vals">${ts.map(t=>`<span>${termHTML(t.p)} ${objHTML(t)}</span>`).join("")}</span></button>`;
+  }).join("");
+}
+document.getElementById("overlaps").addEventListener("click",e=>{
+  const b=e.target.closest("[data-ov]"); if(!b) return; const on=b.getAttribute("aria-pressed")!=="true";
+  document.querySelectorAll("[data-ov]").forEach(x=>x.setAttribute("aria-pressed","false"));
+  if(on){ b.setAttribute("aria-pressed","true"); const f=FACTS[+b.dataset.ov]; highlight=T.filter(t=>t.s===f.subj&&f.preds.includes(t.p)).map(t=>t.i); selected=f.subj; }
+  else highlight=null;
+  renderInspect(); draw(); document.getElementById("scene").scrollIntoView({block:"nearest",behavior:reduce?"auto":"smooth"});
+});
+
+/* ---------- Deux écritures : Turtle et RDF/XML ---------- */
+let fmt="ttl", mode="lisible";
+const ALLNS=Object.assign({}, OTHER_NS, Object.fromEntries(NS.map(n=>[n.p,n.iri])));
+function P(qname){ const [p,l]=qname.split(/:(.*)/s); const iri=ALLNS[p]+l;
+  return mode==="lisible" ? `<span class="p" style="--c:${nsColorVar(p)}" title="${esc(iri)}">${p}:</span>${esc(l)}` : esc(qname); }
+function iriTerm(t){ return t.startsWith("<") ? esc(t) : P(t); }
+function turtle(){
+  const decl=Object.entries(ALLNS);
+  let out = mode==="lisible"
+    ? `<span class="k fold" data-fold="1"># ${tx(`${decl.length} espaces de noms déclarés (cliquer pour déplier)`,`${decl.length} namespaces declared (click to expand)`)}</span>\n`
+    : decl.map(([p,i])=>`<span class="k">@prefix</span> ${p}: &lt;${esc(i)}&gt; .`).join("\n")+"\n";
+  if(mode==="lisible" && unfolded) out=`<span class="k fold" data-fold="1"># ${tx("replier les déclarations","collapse the declarations")}</span>\n`+decl.map(([p,i])=>`<span class="k">@prefix</span> ${P(p+":")} &lt;${esc(i)}&gt; .`).join("\n")+"\n";
+  for(const e of Object.keys(ENT)){
+    const ts=T.filter(t=>t.s===e); if(!ts.length) continue;
+    out+=`\n${iriTerm(ENT[e].iri)}\n`+ts.map(t=>`    ${t.p==="rdf:type"?`<span class="k">a</span>`:P(t.p)} ${t.ref?iriTerm(ENT[t.o].iri):t.p==="rdf:type"?P(t.o):`<span class="s">"${esc(t.o)}"</span>`}`).join(" ;\n")+" .\n";
+    const ex=EXT.filter(x=>x.of===e); if(ex.length) out=out.replace(/ \.\n$/, " ;\n"+ex.map(x=>`    ${P("owl:sameAs")} ${esc(x.iri)}`).join(" ;\n")+" .\n");
+  }
+  return out;
+}
+const xmlIri=t=> t.startsWith("<") ? t.slice(1,-1) : (ALLNS[t.split(":")[0]]+t.split(/:(.*)/s)[1]);
+function xml(){
+  const decl=Object.entries(ALLNS);
+  const tag=q=> mode==="lisible" ? P(q) : esc(q);
+  let out=`<span class="k">&lt;?xml version="1.0" encoding="UTF-8"?&gt;</span>\n&lt;${tag("rdf:RDF")}`;
+  if(mode==="lisible" && !unfolded) out+=` <span class="k fold" data-fold="1">… ${decl.length} ${tx("xmlns repliés","xmlns collapsed")}</span>&gt;\n`;
+  else out+=(mode==="lisible"?` <span class="k fold" data-fold="1">(${tx("replier","collapse")})</span>`:"")+"\n"+decl.map(([p,i])=>`    xmlns:${p}="${esc(i)}"`).join("\n")+"&gt;\n";
+  for(const e of Object.keys(ENT)){
+    const ts=T.filter(t=>t.s===e); if(!ts.length) continue;
+    out+=`\n  &lt;${tag("rdf:Description")} ${tag("rdf:about")}="${esc(xmlIri(ENT[e].iri))}"&gt;\n`;
+    for(const t of ts){
+      if(t.p==="rdf:type") out+=`    &lt;${tag("rdf:type")} ${tag("rdf:resource")}="${esc(xmlIri(t.o))}"/&gt;\n`;
+      else if(t.ref) out+=`    &lt;${tag(t.p)} ${tag("rdf:resource")}="${esc(xmlIri(ENT[t.o].iri))}"/&gt;\n`;
+      else out+=`    &lt;${tag(t.p)}&gt;<span class="s">${esc(t.o)}</span>&lt;/${tag(t.p)}&gt;\n`;
+    }
+    for(const x of EXT.filter(x=>x.of===e)) out+=`    &lt;${tag("owl:sameAs")} ${tag("rdf:resource")}="${esc(x.iri.slice(1,-1))}"/&gt;\n`;
+    out+=`  &lt;/${tag("rdf:Description")}&gt;\n`;
+  }
+  return out+`&lt;/${tag("rdf:RDF")}&gt;`;
+}
+let unfolded=false;
+function renderCode(){ document.getElementById("code").innerHTML = fmt==="ttl" ? turtle() : xml(); }
+document.querySelectorAll("[data-fmt]").forEach(b=>b.addEventListener("click",()=>{ fmt=b.dataset.fmt; document.querySelectorAll("[data-fmt]").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderCode(); }));
+document.querySelectorAll("[data-mode]").forEach(b=>b.addEventListener("click",()=>{ mode=b.dataset.mode; document.querySelectorAll("[data-mode]").forEach(x=>x.setAttribute("aria-pressed",String(x===b))); renderCode(); }));
+document.getElementById("code").addEventListener("click",e=>{ if(e.target.closest("[data-fold]")){ unfolded=!unfolded; renderCode(); } });
+
+function renderAll(){ renderNS(); renderInspect(); renderOverlaps(); renderCode(); }
+
+/* ---------- Bascule de langue ---------- */
+const hashLang=()=> /^#(en|fr)$/i.test(location.hash) ? location.hash.slice(1).toLowerCase() : null;
+function storedLang(){ try{ const v=localStorage.getItem("strates-lang"); return v==="en"||v==="fr" ? v : null; }catch(_){ return null; } }
+function applyLang(l, persist){
+  lang = l==="en" ? "en" : "fr";
+  document.documentElement.lang=lang;
+  document.title=i18n("title");
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent=i18n(el.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-html]").forEach(el=>{ el.innerHTML=i18n(el.dataset.i18nHtml); });
+  document.querySelectorAll("[data-i18n-aria]").forEach(el=>{ el.setAttribute("aria-label",i18n(el.dataset.i18nAria)); });
+  document.querySelectorAll("[data-lang]").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.lang===lang)));
+  if(persist){
+    try{ localStorage.setItem("strates-lang",lang); }catch(_){}
+    if(hashLang()!==lang){ try{ history.replaceState(null,"","#"+lang); }catch(_){} }
+  }
+  renderAll(); draw();
+}
+document.querySelectorAll("[data-lang]").forEach(b=>b.addEventListener("click",()=>applyLang(b.dataset.lang,true)));
+addEventListener("hashchange",()=>{ const h=hashLang(); if(h && h!==lang) applyLang(h,true); });
+applyLang(hashLang() || storedLang() || (/^fr/i.test(navigator.language||"") ? "fr" : "en"), false);
+resize();
+</script>
