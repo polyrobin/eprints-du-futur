@@ -10,7 +10,7 @@ déjà majoritaires. Ce dépôt réunit le plaidoyer pour un successeur naturel 
 | Dossier | Rôle |
 |---|---|
 | [`manifeste/`](manifeste/) ([English](manifeste/MANIFESTO.en.md)) | Le plaidoyer pour un successeur naturel d'EPrints, qui garde ses forces (EPScript, simplicité, extensibilité) et corrige ses limites structurelles. |
-| [`prototypes/`](prototypes/) | Des démonstrations concrètes de certaines idées du manifeste. |
+| [`prototypes/`](prototypes/) | Des démonstrations concrètes de certaines idées du manifeste, à essayer en ligne : [atelier EPScript 2.0](https://polyrobin.github.io/eprints-du-futur/prototypes/atelier-epscript2/) et [notice en strates](https://polyrobin.github.io/eprints-du-futur/prototypes/strates-donnees-liees/). |
 
 Deux projets liés, publiés séparément : la norme **OAIHP** (*Open Artificial Intelligence Harvesting Protocol*,
 en préparation), qui rend un dépôt lisible, synchronisable et vérifiable par les machines, et **oaihp-eprints**,
@@ -39,7 +39,7 @@ majority. This repository gathers the case for a natural successor to EPrints an
 | Folder | Role |
 |---|---|
 | [`manifeste/`](manifeste/) ([English version](manifeste/MANIFESTO.en.md)) | The case for a natural successor to EPrints, one that keeps its strengths (EPScript, simplicity, extensibility) and fixes its structural limits. |
-| [`prototypes/`](prototypes/) | Concrete demonstrations of some of the manifesto's ideas. |
+| [`prototypes/`](prototypes/) | Concrete demonstrations of some of the manifesto's ideas, to try online: [EPScript 2.0 workshop](https://polyrobin.github.io/eprints-du-futur/prototypes/atelier-epscript2/#en) and [Record in Strata](https://polyrobin.github.io/eprints-du-futur/prototypes/strates-donnees-liees/#en). |
 
 Two related projects are published separately: the **OAIHP** standard (*Open Artificial Intelligence Harvesting
 Protocol*, in preparation), which makes a repository readable, synchronizable and verifiable by machines, and
