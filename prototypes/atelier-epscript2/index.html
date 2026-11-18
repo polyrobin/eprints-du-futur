@@ -11,8 +11,8 @@
 :root{
   --bg:#f3f5f9; --surface:#ffffff; --sunken:#eaeef5; --fg:#141c29; --muted:#566377; --line:#d5dce7;
   --accent:#1d4cb8; --accent-soft:#e2eafb;
-  --data:#0b6a85; --data-soft:#dcf0f5; --logic:#6538b0; --logic-soft:#eee6fb; --fn:#26743a; --fn-soft:#e0f2e4;
-  --lit:#4b5566; --lit-soft:#eef0f4; --space:#d9822b; --str:#2f7040; --warn:#8a5a00; --warn-soft:#fdf3dc; --err:#b42318; --err-soft:#fde9e7; --ok:#26743a;
+  --data:#8b1872; --data-soft:#f6e6f1; --logic:#0033a3; --logic-soft:#e5ebfa; --fn:#5f3b11; --fn-soft:#f3ebe1;
+  --lit:#4b5566; --lit-soft:#eef0f4; --space:#c26a00; --str:#157558; --warn:#7a5c00; --warn-soft:#fdf3dc; --err:#b42318; --err-soft:#fde9e7; --ok:#157558;
   --ui:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
   --display:"IBM Plex Sans Condensed","IBM Plex Sans",system-ui,sans-serif;
   --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -21,13 +21,13 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0e131b; --surface:#151c27; --sunken:#1b2431; --fg:#e5eaf1; --muted:#98a5b7; --line:#2a3546;
   --accent:#86a8ff; --accent-soft:#1d2945;
-  --data:#5fc4df; --data-soft:#122f38; --logic:#b99dff; --logic-soft:#281f40; --fn:#72d08c; --fn-soft:#15301e;
-  --lit:#b3bdcb; --lit-soft:#212a37; --space:#f0a35a; --str:#8fd19e; --warn:#f2c46b; --warn-soft:#3a2e14; --err:#ff8f86; --err-soft:#3b1b1a; --ok:#72d08c; color-scheme:dark}}
+  --data:#ff7ab2; --data-soft:#3a1a2c; --logic:#47bcf5; --logic-soft:#10283a; --fn:#e2a45a; --fn-soft:#33261a;
+  --lit:#b3bdcb; --lit-soft:#212a37; --space:#f0a35a; --str:#5fe3a8; --warn:#f2c46b; --warn-soft:#3a2e14; --err:#ff8f86; --err-soft:#3b1b1a; --ok:#5fe3a8; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0e131b; --surface:#151c27; --sunken:#1b2431; --fg:#e5eaf1; --muted:#98a5b7; --line:#2a3546;
   --accent:#86a8ff; --accent-soft:#1d2945;
-  --data:#5fc4df; --data-soft:#122f38; --logic:#b99dff; --logic-soft:#281f40; --fn:#72d08c; --fn-soft:#15301e;
-  --lit:#b3bdcb; --lit-soft:#212a37; --space:#f0a35a; --str:#8fd19e; --warn:#f2c46b; --warn-soft:#3a2e14; --err:#ff8f86; --err-soft:#3b1b1a; --ok:#72d08c; color-scheme:dark}
+  --data:#ff7ab2; --data-soft:#3a1a2c; --logic:#47bcf5; --logic-soft:#10283a; --fn:#e2a45a; --fn-soft:#33261a;
+  --lit:#b3bdcb; --lit-soft:#212a37; --space:#f0a35a; --str:#5fe3a8; --warn:#f2c46b; --warn-soft:#3a2e14; --err:#ff8f86; --err-soft:#3b1b1a; --ok:#5fe3a8; color-scheme:dark}
 
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--ui);font-size:14px;line-height:1.5;
@@ -74,14 +74,14 @@ button[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--acc
 .hl{pointer-events:none;overflow:hidden;color:var(--fg)}
 textarea#src{resize:none;background:transparent;color:transparent;caret-color:var(--fg);overflow:auto}
 textarea#src::selection{background:var(--accent-soft);color:transparent}
-.hl span,.blocks .tok{transition:opacity .15s}
+@media (prefers-reduced-motion:no-preference){.hl span,.blocks .tok{transition:opacity .15s}}
 .kw{color:var(--logic);font-weight:600}
 .hl .kw,.blocks .tok.kw{font:inherit;font-weight:inherit;text-transform:none;letter-spacing:0}
 [hidden]{display:none !important}
-.fd{color:var(--data)} .mt{color:var(--fn)} .fc{color:var(--fn);font-weight:500}
+.fd{color:var(--data);font-style:italic} .mt{color:var(--fn)} .fc{color:var(--fn);font-weight:500}
 .st{color:var(--str)} .nm{color:var(--str)} .op{color:var(--muted)} .vr{color:var(--fg)}
 .cm{color:var(--muted);font-style:italic} .bad{color:var(--err);text-decoration:underline wavy}
-.hl .dim{opacity:.38}
+.hl .dim{opacity:.55}
 .sp2{background:linear-gradient(var(--space),var(--space)) bottom/80% 2px no-repeat}
 .errlayer{position:absolute;inset:0;pointer-events:none;z-index:3;overflow:hidden}
 .errmark{position:absolute;display:flex;flex-direction:column;align-items:flex-start}
@@ -105,7 +105,7 @@ textarea#src::selection{background:var(--accent-soft);color:transparent}
 .blocks .s-lit{background:color-mix(in srgb,var(--str) 14%,transparent);color:var(--str);border-radius:3px;padding:0 1px;cursor:pointer}
 .blocks .s-lit .empty{font-family:var(--ui);font-style:italic;font-size:11px}
 .blocks .cm{display:inline-block;margin-bottom:2px}
-.blocks.focus .tok{opacity:.35}
+.blocks.focus .tok{opacity:.55}
 .blocks.focus .active .tok{opacity:1}
 .blocks .bx.active{outline:2px solid var(--accent);outline-offset:1px}
 .blocks .bx:hover{border-color:var(--accent)}
@@ -206,11 +206,22 @@ pre.code{font-family:var(--mono);font-size:12px;line-height:1.55;background:var(
 .citebox{background:var(--sunken);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
 .dl{display:flex;flex-wrap:wrap;gap:6px}
 .dl span{font-size:12.5px;border:1px solid var(--line);border-radius:6px;padding:3px 9px;color:var(--muted)}
-footer{color:var(--muted);font-size:12.5px;max-width:90ch}
+footer{color:var(--muted);font-size:12.5px;max-width:90ch;display:flex;flex-direction:column;gap:10px}
+footer p{margin:0}
+.errline::before{content:"✕ ";font-weight:700}
+.warnline::before{content:"⚠ "}
+.ok::before{content:"✓ "}
+.rterr::before{content:"✕ "}
+.cite .lnk{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
+.skip{position:absolute;left:12px;top:-60px;z-index:50;background:var(--surface);color:var(--accent);border:2px solid var(--accent);border-radius:6px;padding:6px 12px;font-weight:600}
+.skip:focus{top:8px}
+.split:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.split:focus-visible::after{background:var(--accent)}
 @media (prefers-reduced-motion:no-preference){.blk,.chip,button{transition:border-color .12s,color .12s}}
 </style>
 
 <div class="wrap">
+  <a class="skip" href="#src" data-en="Skip to the editor">Aller à l'éditeur</a>
   <header class="top">
     <div>
       <h1 data-en="EPScript Workshop &lt;span class=&quot;ver&quot;&gt;2.0&lt;/span&gt;">Atelier EPScript <span class="ver">2.0</span></h1>
@@ -226,7 +237,7 @@ footer{color:var(--muted);font-size:12.5px;max-width:90ch}
     </div>
   </header>
 
-  <div class="shell">
+  <main class="shell" id="main">
   <aside class="side" id="side" aria-label="Fonctions disponibles" data-en-aria-label="Available functions">
     <div class="side-head"><span class="side-title" data-en="Available functions">Fonctions disponibles</span><button type="button" id="side-toggle" aria-expanded="true" title="Replier la colonne">«</button></div>
     <div class="side-body" id="side-body"></div>
@@ -237,10 +248,10 @@ footer{color:var(--muted);font-size:12.5px;max-width:90ch}
       <div class="doctabs" role="group" aria-label="Document"><button type="button" data-doc="rule" data-en="Rule">Règle</button><button type="button" data-doc="lib" data-en="Functions">Fonctions</button><span class="docinfo" id="docinfo"></span></div>
       <div class="editor" id="view-code">
         <div class="gutter" id="gutter" aria-hidden="true"></div>
-        <div class="area"><pre class="hl" id="hl" aria-hidden="true"></pre><textarea id="src" spellcheck="false" aria-label="Code source EPScript 2.0" data-en-aria-label="EPScript 2.0 source code"></textarea></div>
+        <div class="area"><pre class="hl" id="hl" aria-hidden="true"></pre><textarea id="src" spellcheck="false" aria-label="Code source EPScript 2.0" data-en-aria-label="EPScript 2.0 source code" aria-describedby="status"></textarea></div>
       </div>
       <div class="boxview" id="view-boxes" hidden>
-        <div class="pbody blocks textual" id="blocks"></div>
+        <div class="pbody blocks textual" id="blocks" tabindex="0" role="region" aria-label="Vue en boîtes" data-en-aria-label="Box view"></div>
         <div class="legend">
           <span class="chip fd" style="background:var(--data-soft)" data-en="field">champ</span><span class="chip c-lit" data-en="text">texte</span>
           <span class="chip kw" style="background:var(--logic-soft)" data-en="logic">logique</span>
@@ -285,11 +296,12 @@ footer{color:var(--muted);font-size:12.5px;max-width:90ch}
   </div>
 
 
-  </div>
-  <footer data-en="What this shows: functions in their own document, joined to the rule at compile time, and always listed in a collapsible column with the built-in functions, methods and fields (a comment just above a function becomes its description); function parameters typed from their calls; programming by example (a reference written by hand becomes an EPScript rule to adjust); completion drawn from the grammar and the schema, and next-step prediction drawn from an index of the code itself and a small base of common forms, with no model, which also flags record types that are not covered; “magic” punctuation that keeps the rule simple (compare the simplified and detailed versions on the trap record, with and without magic punctuation); a readable syntax outside XML, written in French or in English on one neutral structure (switching language rewrites the script without changing its fingerprint); reusable functions; type checking that flags an unknown field and suggests the right name before going live; isolated execution that stops endless recursion; syntax highlighting and, in the same window, a switch between code and boxes aligned on the text, with the output computed live just below, where the scope being written stays sharp and the rest fades; and one record served in three layers (data for robots, frame for screen readers, form for browsers). The language, compiler and renderings are deliberately simplified.">
-    Ce qui est démontré : les fonctions dans leur propre document, réunies à la règle à la compilation, et listées en permanence dans une colonne repliable avec les fonctions intégrées, les méthodes et les champs (un commentaire juste au-dessus d'une fonction devient sa description) ; des paramètres de fonction typés d'après leurs appels ; la programmation par l'exemple (une référence écrite à la main devient une règle EPScript à ajuster) ; une complétion tirée de la grammaire et du schéma, et une prédiction de la suite tirée de l'index du code lui-même et d'une petite base de formes courantes, sans modèle, qui signale aussi les types de notice non couverts ; une ponctuation « magique » qui rend la règle simple (comparez la version simplifiée et la version détaillée sur la notice piège, avec et sans ponctuation magique) ; une syntaxe lisible hors du XML, écrite en français ou en anglais sur une même structure neutre (le changement de langue réécrit le script sans en changer l'empreinte) ; des fonctions réutilisables ; une vérification de types qui signale un champ inconnu et suggère le bon nom avant la mise en ligne ; une exécution isolée qui arrête une récursion sans fin ; une coloration syntaxique et, dans la même fenêtre, une bascule entre le code et les boîtes alignées sur le texte, avec le rendu calculé en direct juste en dessous, où la portée en cours d'écriture reste nette et le reste s'estompe ; et une même notice servie en trois couches (données pour les robots, cadre pour les lecteurs d'écran, forme pour les navigateurs). Le langage, le compilateur et les rendus sont volontairement simplifiés.
+  </main>
+  <footer>
+  <p data-en="What this shows: functions in their own document, joined to the rule at compile time, and always listed in a collapsible column with the built-in functions, methods and fields (a comment just above a function becomes its description); function parameters typed from their calls; programming by example (a reference written by hand becomes an EPScript rule to adjust); completion drawn from the grammar and the schema, and next-step prediction drawn from an index of the code itself and a small base of common forms, with no model, which also flags record types that are not covered; “magic” punctuation that keeps the rule simple (compare the simplified and detailed versions on the trap record, with and without magic punctuation); a readable syntax outside XML, written in French or in English on one neutral structure (switching language rewrites the script without changing its fingerprint); reusable functions; type checking that flags an unknown field and suggests the right name before going live; isolated execution that stops endless recursion; syntax highlighting and, in the same window, a switch between code and boxes aligned on the text, with the output computed live just below, where the scope being written stays sharp and the rest fades; and one record served in three layers (data for robots, frame for screen readers, form for browsers). The language, compiler and renderings are deliberately simplified.">
+    Ce qui est démontré : les fonctions dans leur propre document, réunies à la règle à la compilation, et listées en permanence dans une colonne repliable avec les fonctions intégrées, les méthodes et les champs (un commentaire juste au-dessus d'une fonction devient sa description) ; des paramètres de fonction typés d'après leurs appels ; la programmation par l'exemple (une référence écrite à la main devient une règle EPScript à ajuster) ; une complétion tirée de la grammaire et du schéma, et une prédiction de la suite tirée de l'index du code lui-même et d'une petite base de formes courantes, sans modèle, qui signale aussi les types de notice non couverts ; une ponctuation « magique » qui rend la règle simple (comparez la version simplifiée et la version détaillée sur la notice piège, avec et sans ponctuation magique) ; une syntaxe lisible hors du XML, écrite en français ou en anglais sur une même structure neutre (le changement de langue réécrit le script sans en changer l'empreinte) ; des fonctions réutilisables ; une vérification de types qui signale un champ inconnu et suggère le bon nom avant la mise en ligne ; une exécution isolée qui arrête une récursion sans fin ; une coloration syntaxique et, dans la même fenêtre, une bascule entre le code et les boîtes alignées sur le texte, avec le rendu calculé en direct juste en dessous, où la portée en cours d'écriture reste nette et le reste s'estompe ; et une même notice servie en trois couches (données pour les robots, cadre pour les lecteurs d'écran, forme pour les navigateurs). Le langage, le compilateur et les rendus sont volontairement simplifiés.</p>
+  <p class="signature" >Copyright © 2026 Robin Sylvestre<br>Robin Sylvestre avec Claude Code<br>PolyPublie ❤️ Polytechnique Montréal</p>
   </footer>
-  <p class="signature" style="margin:0;color:var(--muted);font-size:12.5px">Copyright © 2026 Robin Sylvestre<br>Robin Sylvestre avec Claude Code<br>PolyPublie ❤️ Polytechnique Montréal</p>
 </div>
 
 <script>
@@ -1435,7 +1447,7 @@ function compile(){
   catch(e){ if(e instanceof EpsError) errs=[e]; else throw e; }
   const ms=(performance.now()-t0).toFixed(1);
   const errsL=errs.map(localErr); lastErrs=errsL.filter(e=>e.doc===activeDoc); updateGutter(new Set(lastErrs.map(e=>e.line)));
-  const st=$("status");
+  const st=$("status"); src.setAttribute("aria-invalid", errs.length?"true":"false");
   if(errs.length){
     st.innerHTML=`<span>${errs.length} ${T("problème","problem")}${errs.length>1?"s":""} — ${T("le dernier état valide reste affiché :","the last valid state stays on screen:")}</span>`+
       errsL.map(e=>`<button type="button" class="errline" data-start="${e.full}">${DOC_NAME[e.doc]}, ${T("ligne","line")} ${e.line}, col. ${e.col} — ${esc(e.message)}</button>`).join("");
@@ -1456,7 +1468,7 @@ function renderOutputs(){
   const results=RECORDS.map(citeFor);
   $("tests").innerHTML=RECORDS.map((r,i)=>`<button type="button" class="test" data-i="${i}" aria-pressed="${i===selected}">
     <span class="tt">${TYPE_LABEL[r.type]} · ${T("notice","record")} ${r.id}</span>
-    ${results[i].err?`<span class="rterr">${esc(results[i].err)}</span>`:`<span class="cite">${results[i].html||`<em>(${T("vide","empty")})</em>`}</span>`}</button>`).join("");
+    ${results[i].err?`<span class="rterr">${esc(results[i].err)}</span>`:`<span class="cite">${String(results[i].html).replace(/<a\b[^>]*>/g,'<span class="lnk">').replace(/<\/a>/g,'</span>')||`<em>(${T("vide","empty")})</em>`}</span>`}</button>`).join("");
   const r=RECORDS[selected], cite=results[selected].html;
   $("out-sel").textContent=`${TYPE_LABEL[r.type]} · ${T("notice","record")} ${r.id}`; $("out-sel").title=T("Choisissez une notice dans le rendu en direct","Pick a record in the live output");
   document.querySelectorAll("[data-layer]").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.layer===layer)));
@@ -1580,7 +1592,7 @@ function renderLayout(){
     el.classList.toggle("wide",wide);
     el.querySelector(`[data-wide="${id}"]`).setAttribute("aria-pressed",String(wide));
     if(wide || !row){ row=document.createElement("div"); row.className="lrow"; root.appendChild(row); }
-    else { const sp=document.createElement("div"); sp.className="split"; sp.setAttribute("role","separator"); sp.setAttribute("aria-orientation","vertical"); sp.title=T("Glisser pour élargir","Drag to resize"); row.appendChild(sp); }
+    else { const sp=document.createElement("div"); sp.className="split"; sp.setAttribute("role","separator"); sp.setAttribute("aria-orientation","vertical"); sp.tabIndex=0; sp.setAttribute("aria-label",T("Largeur des colonnes (flèches gauche et droite)","Column width (left and right arrows)")); sp.title=T("Glisser pour élargir","Drag to resize"); row.appendChild(sp); }
     el.style.flex=`${LAY.size[id]||1} 1 0px`;
     row.appendChild(el);
     if(wide) row=null;
@@ -1607,6 +1619,16 @@ $("layout").addEventListener("pointerdown",e=>{
     const tot=ps.reduce((t,p)=>t+p.getBoundingClientRect().width,0);
     ps.forEach(p=>{ LAY.size[p.dataset.panel]=+(p.getBoundingClientRect().width/tot*ps.length).toFixed(3); }); saveLayout(); renderLayout(); };
   sp.addEventListener("pointermove",move); sp.addEventListener("pointerup",up); sp.addEventListener("pointercancel",up);
+});
+$("layout").addEventListener("keydown",e=>{
+  const sp=e.target.closest&&e.target.closest(".split"); if(!sp || (e.key!=="ArrowLeft"&&e.key!=="ArrowRight")) return;
+  e.preventDefault(); const A=sp.previousElementSibling, B=sp.nextElementSibling, row=sp.parentElement;
+  const ps=[...row.querySelectorAll(":scope>.panel")]; const w=p=>p.getBoundingClientRect().width;
+  const dx=(e.key==="ArrowLeft"?-1:1)*(e.shiftKey?120:40), MIN=240, wa=w(A), wb=w(B), d=Math.max(MIN-wa,Math.min(wb-MIN,dx));
+  const tot=ps.reduce((t,p)=>t+w(p),0);
+  ps.forEach(p=>{ const x=p===A?wa+d:p===B?wb-d:w(p); LAY.size[p.dataset.panel]=+(x/tot*ps.length).toFixed(3); });
+  const idx=[...document.querySelectorAll("#layout .split")].indexOf(sp); saveLayout(); renderLayout();
+  const again=document.querySelectorAll("#layout .split")[idx]; if(again) again.focus();
 });
 // Glisser-déposer des panneaux
 let dragId=null;
